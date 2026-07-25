@@ -269,14 +269,14 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 
 | Week / Month | Task Planned          | Status                            |
 | ------------ | --------------------- | --------------------------------- |
-| Week 1       | Problem finalization  | Pending / In Progress / Completed |
-| Week 2       | Literature survey     |                                   |
-| Week 3       | Requirement analysis  |                                   |
-| Week 4       | System design         |                                   |
-| Week 5       | Prototype development |                                   |
-| Week 6       | Testing               |                                   |
-| Week 7       | Documentation         |                                   |
-| Week 8       | Paper writing         |                                   |
+| Week 1       | Problem finalization  |             Completed             |
+| Week 2       | Literature survey     |             In Progress           |
+| Week 3       | Requirement analysis  |             Completed             |
+| Week 4       | System design         |             Completed             |
+| Week 5       | Prototype development |             In Progress           |
+| Week 6       | Testing               |             Pending               |
+| Week 7       | Documentation         |             Pending               |
+| Week 8       | Paper writing         |             In Progress           |
 
 ---
 
@@ -331,13 +331,20 @@ Add flowchart image here.
 
 ### Algorithm
 
-1. Start
-2. Initialize the system
-3. Read input from sensors/user
-4. Process the data
-5. Generate output/control action
-6. Display/store/transmit result
-7. Stop
+1. System Initialization – Power up the ESP32-S3 and initialize the IMU, GNSS/NavIC, altitude sensor, ESCs, servos and communication modules.
+2. Self-Test & Health Check – Verify sensor communication, battery voltage, telemetry link and actuator status. Prevent arming if a critical fault is detected.
+3. Standby / Arm – Keep propulsion disabled until a valid arm command and mission/operator command are received.
+4. Sensor Acquisition – Continuously collect orientation, acceleration, altitude, position and other available sensor measurements.
+5. Sensor Fusion & State Estimation – Combine measurements to estimate the robot's attitude, position, velocity and motion state.
+6. Control Loop – Run the feedback controllers at high frequency to calculate the required thrust, attitude and motion corrections.
+7. Mode Decision – Determine whether Air, Land or Water mode is requested/appropriate. For the prototype, operator-confirmed switching is safer than claiming fully autonomous terrain classification.
+8. Execute Selected Mode – In Air Mode, operate as a multirotor; in Land Mode, redirect thrust and use the wheels; in Water Mode, maintain flotation and use vectored thrust for surface movement.
+9. Navigation – Follow manual commands or mission waypoints while continuously updating the required heading, speed and position.
+10. Safety Monitoring – Continuously check battery level, communication link, attitude, actuator/current limits and other available health information.
+11. Failsafe Handling – If a critical fault occurs, execute the safest response available for the current mode, such as controlled landing, stopping propulsion, remaining afloat, or returning to a safe location where technically feasible.
+12. Telemetry & Logging – Transmit vehicle status to the ground station and record important sensor, control and fault information.
+13. Mission Check – If the mission is incomplete, return to the sensing/control loop. If complete, move to shutdown.
+14. Safe Shutdown – Stop the mission, disarm propulsion and place actuators in their safe state.
 
 ---
 
@@ -347,12 +354,19 @@ Explain the actual implementation of the project.
 
 ### Hardware Implementation
 
-Write details about connections, components, power supply, sensors, actuators, PCB, enclosure, etc.
+The hardware architecture is centered around a custom-designed, 2-layer mixed-signal PCB acting as the primary flight controller.
+
+1. Power Domains: To prevent inductive voltage spikes from resetting the logic core, power is strictly isolated into two domains. The "Muscle Domain" draws directly from the 4S 6200mAh LiPo battery through a Matek PDB and a 5A UBEC to drive the 30A ESCs and the high-torque DS3218 vectoring servos at 7V-11V. The "Logic Domain" steps voltage down to a clean 3.3V via an AP2112K LDO regulator to power the ESP32-S3, the MPU6050 IMU, and the VL53L1X altimeter.
+2. Structural Assembly: The chassis is fabricated using rigid, lightweight 3d printed components. The four A2212 1400KV BLDC motors are mounted on pivoting brackets connected to the servos, allowing a 90deg dynamic sweep.
+3. Multi-Domain Mobility: Along with rubber tires , 190mm Extruded Polystyrene (XPS) closed-cell foam base are attached to the chassis. These provide passive mechanical suspension on pavement and displace enough water (approx. 4.8 Liters) to act as unsinkable buoyancy floats, keeping the central electronics housing safe from water ingress.
 
 ### Software Implementation
 
-Write details about code structure, libraries used, algorithms, communication protocols, database, app, cloud, etc.
+The firmware is written in Embedded C/C++ using the Arduino IDE and is built upon the FreeRTOS (Real-Time Operating System) framework.
 
+1. Dual-Core Architecture: Task allocation is split across the two cores of the ESP32-S3 to ensure zero latency in critical flight calculations. Core 0 is exclusively dedicated to reading the MPU6050 via I2C, running the Kalman filter, and calculating the high-frequency PID (Proportional-Integral-Derivative) stabilization loops for pitch, roll, and yaw. Core 1 handles non-critical timing tasks, including the transitional state machine (coordinating the servo sweep angles), calculating battery voltage telemetry, and managing the ESP-NOW 2.4GHz peer-to-peer control link.
+2. State Machine: A custom dynamic mixing algorithm smoothly blends standard quadcopter multirotor logic into forward-thrust airboat logic as the servos transition from 0degto 90deg.
+3. 
 ---
 
 ## Code Structure
@@ -417,7 +431,7 @@ arduino-cli upload -p COMx --fqbn board_name
 
 ### Step 4: Observe the Output
 
-Mention the expected output of the project.
+When powered, the RiftWalker initializes its IMU and establishes a secure ESP-NOW link with the ground station, displaying battery voltage and current vector angles. Upon command, the craft can spool its motors to take off vertically like a standard drone, demonstrating stable hover capabilities. When the operator engages "Surface Mode," the servos smoothly rotate the motor arms $90^\circ$ forward while adjusting thrust to prevent altitude loss. On the ground or water, the vehicle utilizes differential aero-thrust to steer and propel itself forward at high speeds, gliding on its XPS wheels with a drastically reduced current draw compared to hovering.
 
 ---
 
@@ -449,42 +463,39 @@ Video Link:
 
 ## Applications
 
-Mention real-world applications of the project.
-
-1.
-2.
-3.
-4.
+1. Post-Disaster Search & Rescue (SAR): Navigating through flooded urban environments, blocked roads, and debris dams where neither standard boats nor ground rovers can pass.
+2. Hazardous Environmental Monitoring: Surveying toxic lakes, unstable wetlands, or swamp ecosystems without the risk of underwater propellers getting tangled in aquatic vegetation.
+3. Tactical Reconnaissance & Border Patrol: Serving as a covert, multi-terrain sentinel capable of flying to a location rapidly and transitioning to a low-power, silent ground/water crawl for long-term observation.
+4. Amphibious Ship-to-Shore Scouting: Launching from a naval vessel, flying to the coastline, and seamlessly driving onto the beach to conduct physical surveys.
+ETC.
 
 ---
 
 ## Advantages
 
-1.
-2.
-3.
-4.
+1. Elimination of Drivetrain Bloat: Achieves an exceptional 2.15:1 thrust-to-weight ratio by using a single set of aero-propellers for all terrains, eliminating the dead-weight of separate wheel motors and heavy gearboxes.
+2. Exponential Endurance Gains: By dropping to the ground or water and operating as an aero-propelled rover, mission endurance is extended from a maximum of ~9.5 minutes in the air up to ~54.5 minutes on the surface.
+3. Passive Buoyancy & Suspension: The lightweight XPS foam wheels serve a dual purpose, acting as excellent shock absorbers for rough terrain and fail-safe, unsinkable flotation hulls for water traversal.
+4. Cost-Effective & Scalable: By eliminating redundant drive hardware and integrating a custom ESP32-based flight controller, the unit cost is drastically reduced compared to commercial military-grade amphibious systems.
 
 ---
 
 ## Limitations
 
-1.
-2.
-3.
-4.
-
+1. Transition Vulnerability: The physical transition phase takes  seconds, during which the craft is highly susceptible to sudden crosswinds or aerodynamic stalling if not perfectly timed.
+2. Ground Clearance Ceilings: Terrestrial obstacle clearance is strictly limited by the radius of the XPS wheels; the vehicle cannot drive over boulders or deep trenches without reverting to flight mode.
+3. Acoustic Signature: Using aero-propulsion to drive on land generates significantly more noise (propeller wash) than a traditional electric wheeled rover, reducing its stealth capabilities in close-proximity scenarios.
+4. Thermal Constraints: When planing on water at high throttle for extended periods, the enclosed central electronics box lacks active airflow cooling, potentially leading to thermal throttling of the ESCs.
+   
 ---
 
 ## Future Scope
 
-Mention possible improvements.
-
-1.
-2.
-3.
-4.
-
+1. Autonomous AI Integration: Upgrading the processing core to incorporate a lightweight AI vision module (e.g., using the ESP32-S3's vector instructions or an external neural accelerator) for autonomous optical obstacle avoidance.
+2. Triple-Redundant Aerospace Sensing: Developing a "V2" PCB that utilizes triple-redundant IMUs and Barometers connected via an SPI bus to create a fault-tolerant voting architecture for military-grade reliability.
+3. BVLOS Telemetry Upgrade: Replacing the 2.4GHz ESP-NOW link with a secure, AES-encrypted Long Range (LoRa) 915MHz telemetry module for Beyond Visual Line of Sight (BVLOS) operations.
+4. Aquatic Self-Righting Mechanism: Engineering an automated algorithmic response or physical mass-shifting mechanism to ensure the craft can self-right and recover if flipped upside down by heavy waves in water mode.
+   
 ---
 
 ## Research Paper / Publication
