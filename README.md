@@ -200,52 +200,68 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 
 ## Hardware Requirements
 
-| Sr. No. | Component | Specification | Quantity | Purpose |
-| ------- | --------- | ------------- | -------- | ------- |
-| 1       |           |               |          |         |
-| 2       |           |               |          |         |
-| 3       |           |               |          |         |
-| 4       |           |               |          |         |
-
+| Sr. No. | Component               | Specification                      | Quantity | Purpose                                           |
+| ------- | ----------------------- | ---------------------------------- | -------: | ------------------------------------------------- |
+| 1       | BLDC Motor              | A2212, 1400 KV                     |        4 | Common propulsion for air, land and water         |
+| 2       | Propeller               | 9050, matched to motor             |        4 | Generates aerodynamic thrust                      |
+| 3       | ESC                     | 4S-compatible, appropriately rated |        4 | Controls BLDC motor speed                         |
+| 4       | LiPo Battery            | 4S, 6200 mAh                       |        1 | Main onboard power source                         |
+| 5       | Microcontroller         | ESP32-S3                           |        1 | Main control, sensor processing and telemetry     |
+| 6       | IMU                     | 6/9-axis accelerometer + gyroscope |        1 | Orientation, motion and stabilization             |
+| 7       | Sensor (Water/Distance) | Relevent to the use case           |        1 | Outdoor positioning and navigation                |
+| 8       | Servo Motors            | High-torque, metal-gear            |        4 | Changes propulsion orientation between modes      |
+| 9       | Wheels                  | Lightweight passive/free-rolling   |        4 | Supports terrestrial locomotion                   |
+| 10      | Buoyancy System         | Lightweight waterproof floats/body |    1 set | Provides stability and flotation on water         |
+| 11      | Power Distribution/BEC  | 4S compatible                      |        1 | Distributes and regulates electrical power        |
+| 12      | Telemetry System        | Wireless bidirectional link        |        1 | Operator commands and vehicle telemetry           |
+| 13      | Camera*                 | Lightweight onboard camera         |        1 | Visual feedback/perception                        |
+| 14      | Frame & Mounting System | Lightweight rigid structure        |        1 | Supports all mechanical and electronic components |
+| 15      | Flight Controller       | Custom                             |        1 | For functioning of everything perfectly           |
 ---
 
 ## Software Requirements
 
-| Sr. No. | Software / Tool | Version | Purpose |
-| ------- | --------------- | ------- | ------- |
-| 1       |                 |         |         |
-| 2       |                 |         |         |
-| 3       |                 |         |         |
+| Sr. No. | Software / Tool          | Version           | Purpose                                          |
+| ------- | ------------------------ | ----------------- | ------------------------------------------------ |
+| 1       | Arduino IDE / PlatformIO | Current stable    | ESP32-S3 firmware development                    |
+| 2       | Embedded C/C++           | Current toolchain | Low-level control and sensor interfacing         |
+| 3       | Python                   | 3.x               | Data analysis, testing and algorithm prototyping |
+| 4       | MATLAB / Simulink        | Available release | Modelling, PID tuning and system analysis        |
+| 5       | Inventor                 | Available release | Mechanical CAD and assembly design               |
+| 6       | KiCad                    | Current stable    | PCB and electronic system design                 |
+| 7       | Git / GitHub             | Current stable    | Version control and project documentation        |
+| 8       | SimScale / OpenFOAM      | Current stable    | Computational Fluid Dynamics (CFD) simulation    |
+| 9       | Wokwi                    | Current stable    | Headless hardware testing prior to flashing.     |
 
 ---
 
 ## Technologies Used
 
-Mention technologies used in the project.
-
-Example:
-
-* Embedded C / Python / JavaScript
-* Arduino / STM32 / ESP32 / Raspberry Pi
-* ROS / MATLAB / Simulink
-* Machine Learning / Computer Vision
-* IoT / Cloud / Mobile App
-* PCB Design / CAD Design
+1. Embedded Systems: ESP32-S3 and Embedded C/C++ for real-time control.
+2. Custom ESP32-S3 Architecture: Dual-core utilization with FreeRTOS (Core 0: PID Loops, Core 1: Sensor Fusion & Telemetry).
+3. Sensor Fusion & Control Systems: Kalman filtering for IMU data and multi-axis Proportional-Integral-Derivative (PID) tuning.
+4. ESP-NOW RF Protocol: Low-latency, peer-to-peer 2.4 GHz wireless telemetry bypassing standard Wi-Fi overhead.
+5. PCB Design (EDA): Opto-isolated power domains, differential pair routing, and SMD integration.
+6. CAD & Mechanical Design: Development of the lightweight frame, wheel mounts, buoyancy structures and motor-vectoring mechanism.
+7. Thrust Vectoring: Servo-controlled motor orientation to reuse propulsion across different operating modes.
+8. Multirotor Propulsion: BLDC motors, ESCs and propellers for aerial propulsion.
+9. Feedback Control: PID-based stabilization and motion control.
+10. Wireless Communication: Bidirectional command, telemetry and vehicle-status communication.
+11. Semi Autonomous operation: Automatic terrain detection etc.
+12. Data Analysis & Simulation: Python and MATLAB/Simulink for evaluation.
 
 ---
 
 ## Methodology
 
-Explain the step-by-step approach.
-
-1. Literature survey
-2. Problem identification
-3. Requirement analysis
-4. System design
-5. Hardware/software development
-6. Integration
-7. Testing and validation
-8. Documentation and publication
+1. Literature Survey: Extensive study of the current terrain-locking problems in disaster response and analysis of existing dual-drivetrain (heavy) hybrid robotic solutions.
+2. Problem Identification: Identifying the weight penalty of multiple drive systems as the primary factor limiting the endurance of current amphibious robots.
+3. Requirement Analysis: Calculating the required thrust-to-weight ratio (targeting 2.15:1), servo holding torque under dynamic flight loads, and required XPS volumetric buoyancy.
+4. System Design: Drafting the physical 3D CAD model, conducting aerodynamic CFD simulations, and routing the custom ESP32-S3 flight controller schematic.
+5. Hardware/Software Development: Fabricating the physical carbon-fiber frame, assembling the surface-mount PCB, and programming the FreeRTOS state-machine firmware.
+6. Integration: Mating the 3.3V Logic domain (sensors) with the 7V/11V Muscle domain (ESCs and servos) and establishing the ESP-NOW ground station link.
+7. Testing and Validation: Conducting real-world PID tuning in a test rig, followed by transition testing (Air to Land, Land to Water) to validate structural stability and power efficiency.
+8. Documentation and Publication: Compiling the final PCB verification reports, dynamic load analyses, hardware-in-the-loop simulation data, and the final project presentation.
 
 ---
 
