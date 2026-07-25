@@ -20,7 +20,7 @@ RiftWalker: The Triphibious Bot
 
 ## Guide Details
 
-**Project Guide: Sangeeta Prasanna Ram**  
+**Project Guide: Mrs. Sangeeta Prasanna Ram**  
 **Department:** Automation and Robotics  
 **Institute:** VESIT, Mumbai  
 
@@ -214,7 +214,7 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 | 10      | Buoyancy System         | Lightweight waterproof floats/body |    1 set | Provides stability and flotation on water         |
 | 11      | Power Distribution/BEC  | 4S compatible                      |        1 | Distributes and regulates electrical power        |
 | 12      | Telemetry System        | Wireless bidirectional link        |        1 | Operator commands and vehicle telemetry           |
-| 13      | Camera*                 | Lightweight onboard camera         |        1 | Visual feedback/perception                        |
+| 13      | Camera                 | Lightweight onboard camera         |        1 | Visual feedback/perception                        |
 | 14      | Frame & Mounting System | Lightweight rigid structure        |        1 | Supports all mechanical and electronic components |
 | 15      | Flight Controller       | Custom                             |        1 | For functioning of everything perfectly           |
 ---
