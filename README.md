@@ -366,7 +366,6 @@ The firmware is written in Embedded C/C++ using the Arduino IDE and is built upo
 
 1. Dual-Core Architecture: Task allocation is split across the two cores of the ESP32-S3 to ensure zero latency in critical flight calculations. Core 0 is exclusively dedicated to reading the MPU6050 via I2C, running the Kalman filter, and calculating the high-frequency PID (Proportional-Integral-Derivative) stabilization loops for pitch, roll, and yaw. Core 1 handles non-critical timing tasks, including the transitional state machine (coordinating the servo sweep angles), calculating battery voltage telemetry, and managing the ESP-NOW 2.4GHz peer-to-peer control link.
 2. State Machine: A custom dynamic mixing algorithm smoothly blends standard quadcopter multirotor logic into forward-thrust airboat logic as the servos transition from 0degto 90deg.
-3. 
 ---
 
 ## Code Structure
