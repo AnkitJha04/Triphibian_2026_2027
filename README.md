@@ -267,16 +267,24 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 
 ## Project Timeline
 
-| Week / Month | Task Planned          | Status                            |
-| ------------ | --------------------- | --------------------------------- |
-| Week 1       | Problem finalization  |             Completed             |
-| Week 2       | Literature survey     |             In Progress           |
-| Week 3       | Requirement analysis  |             Completed             |
-| Week 4       | System design         |             Completed             |
-| Week 5       | Prototype development |             In Progress           |
-| Week 6       | Testing               |             Pending               |
-| Week 7       | Documentation         |             Pending               |
-| Week 8       | Paper writing         |             In Progress           |
+
+| Week / Month |                      Task Planned                                  | Status      |
+|--------------|--------------------------------------------------------------------|-------------|
+| **Week 1**   | Problem Finalization & Project Planning                            | Completed   |
+| **Week 2**   | Literature Survey & Research Paper Review                          | Completed   |
+| **Week 3**   | Requirement Analysis & Component Selection                         | Completed   |
+| **Week 4**   | Engineering Calculations                                           | Completed   |
+| **Week 5**   | Mechanical Design & 3D CAD Modelling                               | Completed   |
+| **Week 6**   | Simulation & Design Validation                                     | Completed   |
+| **Week 7**   | Flight Controller PCB Design & Schematic Development               | Completed   |
+| **Week 8**   | PCB Routing, ERC/DRC Verification & Hardware Procurement           | Completed   |
+| **Week 9**   | Documentation, Presentation & Hardware Procurement                 | In Progress |
+| **Week 10**  | PCB Fabrication & Assembly                                         | Pending     |
+| **Week 11**  | Hardware Integration & Sensor Interfacing                          | Pending     |
+| **Week 12**  | Firmware Development & System Testing                              | Pending     |
+| **Week 13**  | Final Testing, Documentation & Project Demonstration               | Pending     |
+| **Week 14**  | Research Paper Writing & Project Documentation                     | Pending     |
+| **Week 15**  | Black Book Preparation, Final Presentation & Project Demonstration | Pending     |
 
 ---
 
