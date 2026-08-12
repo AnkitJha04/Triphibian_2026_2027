@@ -312,8 +312,6 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 
 ## Weekly Progress Updates
 
-## Weekly Progress Updates
-
 Students must update this section every week.
 | Week  | Date        |                  Work Completed                |             Next Week         |         Issues / Challenges       | GitHub Commit |
 |------ |------------ |----------------------------------------------- |------------------------------ |---------------------------------- |-------------- |
@@ -335,7 +333,7 @@ Students must update this section every week.
 | File Type             | File Name / Link                                 | Description                                          |
 |--                     |---                                               |---                                                   |
 | **CAD Model**         | [Autodesk Inventor CAD Files](hardware/CAD/)     | 3D mechanical model and assembly of RiftWalker       |
-| **Circuit Diagram**   | [KiCad Schematic](images/circuit_diagram-2.jpg) | Custom ESP32-S3 flight-controller schematic          |
+| **Circuit Diagram**   | [Circuit Diagram ](images/circuit_diagram-2.jpg) | Custom ESP32-S3 flight-controller schematic          |
 | **PCB Design**        | [KiCad PCB Files](hardware/PCB/)                 | Custom flight-controller PCB design and routing      |
 | **ERC / DRC Reports** | [PCB Verification Files](hardware/PCB/)          | Electrical and design rule verification reports      |
 | **Flowchart**         | [System Flowchart](images/flowchart.jpeg)        | Proposed operating sequence and control flow         |
@@ -406,28 +404,55 @@ Concurrency & Safety: Hardware mutex locks are implemented to allow the two core
 BE-Capstone-Project/
 │
 ├── README.md
+│
 ├── docs/
-│   ├── literature_survey.md
-│   ├── project_report.pdf
-│   └── presentation.pptx
+│   └──  literature_survey.md
 │
 ├── hardware/
-│   ├── circuit_diagram.png
+│   ├── hardware.md
 │   ├── pcb_design/
-│   └── cad_model/
+|       ├── DRC.rpt
+|       ├── ERC.rpt
+|       ├── Flight Controller.kicad_pcb
+|       ├── Flight Controller.kicad_prl
+|       ├── Flight Controller.kicad_pro
+|       ├── Flight Controller.kicad_sch
+|       ├── PCB Dimensions.png
+|       ├── README.md
+|       └── fp-info-cache
+│   └── cad_model
+|       ├── BLDC Holder.ipt
+|       ├── Bearing.ipt
+|       ├── Body.ipt
+|       ├── Connecting Rod.ipt
+|       ├── Final Body.iam
+|       ├── Holder Cover.ipt
+|       ├── Motor.ipt
+|       ├── Propeller.ipt
+|       ├── README.md
+|       ├── Servo.ipt
+|       ├── TEST ASSEMBLY 1.stl
+|       ├── Top Cover.ipt
+|       └── Tyres.ipt
 │
 ├── software/
-│   ├── src/
-│   ├── include/
-│   └── tests/
+│   ├── software.md
+│   └── simulation/
+|       ├── README.md
+|       ├── diagram.json
+|       ├── libraries.txt
+|       ├── sketch.ino
+|       └── wokwi-project.txt
 │
 ├── images/
-│   ├── system_architecture.png
-│   ├── prototype_photo.jpg
-│   └── results.png
+|   ├── circuit_diagram-2.jpg
+|   ├── circuit_diagram.jpeg
+|   ├── flowchart.jpeg
+|   ├── images.md
+|   └── system_architecture.jpeg
 │
 └── references/
-    └── papers/
+    └── paper.md
 ```
 
 ---
@@ -552,6 +577,7 @@ ETC.
 [4] S. L. Pradeep Kumar, B. Deeban, D. Santhosh Kumar, and M. Sasi Kumar, "Design and Fabrication of a Multi-Terrain Triphibian Quadcopter for Airborne, Terrestrial, and Aquatic Mobility," *Discover Mechanical Engineering*, vol. 5, art. no. 20, 2026, doi: 10.1007/s44245-025-00167-7.
 
 [5] Z. Zheng, Q. Cai, J. Wang, X. Xu, M. Cao, H. Yu, J. Li, J. Meng, and G. Lu, "CapsuleBot: A Novel Hybrid Aerial-Ground Bi-Copter Robot With Two Actuated-Wheel-Rotors," *IEEE Robotics and Automation Letters*, vol. 10, no. 1, pp. 120–127, 2025, doi: 10.1109/LRA.2024.3504232.
+
 ---
 
 ## Repository Update Guidelines
