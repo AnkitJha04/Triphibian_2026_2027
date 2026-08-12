@@ -256,18 +256,18 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 
 ## Technologies Used
 
-1. Embedded Systems: ESP32-S3 and Embedded C/C++ for real-time control.
-2. Custom ESP32-S3 Architecture: Dual-core utilization with FreeRTOS (Core 0: PID Loops, Core 1: Sensor Fusion & Telemetry).
-3. Sensor Fusion & Control Systems: Kalman filtering for IMU data and multi-axis Proportional-Integral-Derivative (PID) tuning.
-4. ESP-NOW RF Protocol: Low-latency, peer-to-peer 2.4 GHz wireless telemetry bypassing standard Wi-Fi overhead.
-5. PCB Design (EDA): Opto-isolated power domains, differential pair routing, and SMD integration.
-6. CAD & Mechanical Design: Development of the lightweight frame, wheel mounts, buoyancy structures and motor-vectoring mechanism.
-7. Thrust Vectoring: Servo-controlled motor orientation to reuse propulsion across different operating modes.
-8. Multirotor Propulsion: BLDC motors, ESCs and propellers for aerial propulsion.
-9. Feedback Control: PID-based stabilization and motion control.
-10. Wireless Communication: Bidirectional command, telemetry and vehicle-status communication.
-11. Semi Autonomous operation: Automatic terrain detection etc.
-12. Data Analysis & Simulation: Python and MATLAB/Simulink for evaluation.
+## Technologies Used
+
+1. **Embedded Systems:** ESP32-S3 and Embedded C/C++ for vehicle control and sensor interfacing.
+2. **Sensor Integration & Control:** Integration of IMU, magnetometer, barometer, ultrasonic and water sensors for vehicle-state monitoring and control.
+3. **PID Control:** PID-based stabilization and control of the propulsion system and vehicle motion.
+4. **PCB Design (EDA):** KiCad for schematic design, component selection, PCB layout, routing and ERC/DRC verification.
+5. **CAD & Mechanical Design:** Autodesk Inventor for 3D modelling, assembly design and development of the mechanical structure.
+6. **Thrust Vectoring:** Servo-controlled motor orientation for redirecting propulsion across different operating modes.
+7. **Multirotor Propulsion:** BLDC motors, ESCs and propellers for aerial propulsion.
+8. **Power Management:** Separate logic and servo power domains with battery voltage monitoring and regulated power supplies.
+9. **Wireless Communication:** Wireless communication for vehicle control and telemetry.
+10. **Simulation & Engineering Analysis:** Mechanical and system-level analysis along with calculations for weight, thrust-to-weight ratio, servo torque, power requirements and buoyancy.
 
 ---
 
