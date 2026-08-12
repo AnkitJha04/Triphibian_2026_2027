@@ -201,8 +201,8 @@ That is a much stronger and more realistic technical proposition.
                      └─────────────────────────────┘
 
 ```markdown
-![System Architecture](images/system_architecture.jpeg)
-```
+![System Architecture](images/system_architecture.png)
+````
 
 The RiftWalker system architecture is divided into four main sections:
 
@@ -308,6 +308,9 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 
 ## Weekly Progress Updates
 
+## Weekly Progress Updates
+
+Students must update this section every week.
 | Week  | Date        |                  Work Completed                |             Next Week         |         Issues / Challenges       | GitHub Commit |
 |------ |------------ |----------------------------------------------- |------------------------------ |---------------------------------- |-------------- |
 | **1** | 22/06–28/06 | Problem finalization & planning                | Literature survey             | Concept feasibility               | —             |
@@ -341,20 +344,20 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 Add circuit diagram image here.
 
 ```markdown
-![Circuit Diagram](images/circuit_diagram.jpeg)
+![Circuit Diagram](images/circuit_diagram.png)
 ```
 
 ---
 
 ## Flowchart / Algorithm
 
+Add flowchart image here.
 
 ```markdown
-![Flowchart](images/flowchart.jpeg)
+![Flowchart](images/flowchart.png)
 ```
 
-
-## Algorithm
+### Algorithm
 
 1. System Initialization – Power up the ESP32-S3 and initialize the IMU, GNSS/NavIC, altitude sensor, ESCs, servos and communication modules.
 2. Self-Test & Health Check – Verify sensor communication, battery voltage, telemetry link and actuator status. Prevent arming if a critical fault is detected.
