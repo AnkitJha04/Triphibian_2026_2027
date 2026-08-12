@@ -90,7 +90,7 @@ This project will cover the following key areas:
 Existing unmanned robotic systems are generally designed for operation in a specific environment. They can broadly be classified as follows:
 
 | Platform          | Strength                                               | Main Limitation                                             |
-|---                |---                                                     |---                                                          |
+|------------------ |------------------------------------------------------- |------------------------------------------------------------ |
 | UAV               | Fast aerial movement and access to difficult locations | High energy consumption and limited endurance               |
 | UGV               | Efficient and stable terrestrial operation             | Restricted by water, steep terrain and other obstacles      |
 | USV               | Efficient operation on surface water                   | Limited terrestrial mobility                                |
@@ -218,7 +218,7 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 ## Hardware Requirements
 
 | Sr. No. | Component               | Specification                      | Quantity | Purpose                                           |
-| ------- | ----------------------- | ---------------------------------- | -------: | ------------------------------------------------- |
+| ------- | ----------------------- | ---------------------------------- | -------- | ------------------------------------------------- |
 | 1       | BLDC Motor              | A2212, 1400 KV                     |        4 | Common propulsion for air, land and water         |
 | 2       | Propeller               | 9050, matched to motor             |        4 | Generates aerodynamic thrust                      |
 | 3       | ESC                     | 4S-compatible, appropriately rated |        4 | Controls BLDC motor speed                         |
@@ -254,8 +254,6 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 
 ## Technologies Used
 
-## Technologies Used
-
 1. **Embedded Systems:** ESP32-S3 and Embedded C/C++ for vehicle control and sensor interfacing.
 2. **Sensor Integration & Control:** Integration of IMU, magnetometer, barometer, ultrasonic and water sensors for vehicle-state monitoring and control.
 3. **PID Control:** PID-based stabilization and control of the propulsion system and vehicle motion.
@@ -268,8 +266,6 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 10. **Simulation & Engineering Analysis:** Mechanical and system-level analysis along with calculations for weight, thrust-to-weight ratio, servo torque, power requirements and buoyancy.
 
 ---
-
-## Methodology
 
 ## Methodology
 
@@ -316,15 +312,15 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 
 Students must update this section every week.
 | Week  | Date        |                  Work Completed                |             Next Week         |         Issues / Challenges       | GitHub Commit |
-|---    |---          |---                                             |---                            |---                                |---|
-| **1** | 22/06–28/06 | Problem finalization & planning                | Literature survey             | Concept feasibility               | — |
-| **2** | 29/06–05/07 | Literature survey & paper review               | Requirement analysis          | Mobility vs. weight               | — |
-| **3** | 06/07–12/07 | Requirements & components finalized            | Engineering calculations      | Weight, thrust & cost             | — |
-| **4** | 13/07–19/07 | Weight, thrust, torque & buoyancy calculations | Mechanical design             | Maintaining low weight            | — |
-| **5** | 20/07–26/07 | 3D CAD model & mechanical design               | Design validation & PCB       | Mechanism integration             | — |
-| **6** | 27/07–02/08 | Design validation & simulation                 | PCB schematic                 | Mechanical-electronic integration | — |
-| **7** | 03/08–09/08 | ESP32-S3 schematic & component selection       | PCB routing & verification    | GPIO & power management           | — |
-| **8** | 10/08–16/08 | PCB routing, ERC/DRC & documentation           | PCB fabrication & procurement | Routing & component placement     | — |
+|------ |------------ |----------------------------------------------- |------------------------------ |---------------------------------- |-------------- |
+| **1** | 22/06–28/06 | Problem finalization & planning                | Literature survey             | Concept feasibility               | —             |
+| **2** | 29/06–05/07 | Literature survey & paper review               | Requirement analysis          | Mobility vs. weight               | —             |
+| **3** | 06/07–12/07 | Requirements & components finalized            | Engineering calculations      | Weight, thrust & cost             | —             |
+| **4** | 13/07–19/07 | Weight, thrust, torque & buoyancy calculations | Mechanical design             | Maintaining low weight            | —             |
+| **5** | 20/07–26/07 | 3D CAD model & mechanical design               | Design validation & PCB       | Mechanism integration             | —             |
+| **6** | 27/07–02/08 | Design validation & simulation                 | PCB schematic                 | Mechanical-electronic integration | —             |
+| **7** | 03/08–09/08 | ESP32-S3 schematic & component selection       | PCB routing & verification    | GPIO & power management           | —             |
+| **8** | 10/08–16/08 | PCB routing, ERC/DRC & documentation           | PCB fabrication & procurement | Routing & component placement     | —             |
 
 
 ---
@@ -382,23 +378,29 @@ Add flowchart image here.
 
 ## Implementation Details
 
-Explain the actual implementation of the project.
+The implementation of the RiftWalker project is divided into tightly integrated hardware and software phases, completely bypassing off-the-shelf drone kits in favor of a custom-engineered multi-domain architecture.
 
-### Hardware Implementation
+Hardware Implementation
+Mechanical Frame & Buoyancy: The chassis utilizes custom Z-shaped carbon-fiber arms to elevate the propeller arcs, preventing aerodynamic thrust-blockage. Closed-cell XPS foam wheels are underslung on the chassis, providing mechanical ground clearance for land operations and acting as highly buoyant pontoons to keep the waterline below the main electronics bay during marine operations.
 
-The hardware architecture is centered around a custom-designed, 2-layer mixed-signal PCB acting as the primary flight controller.
+Actuation & Propulsion: The drive system relies on four BLDC motors mounted on rotating vectoring hubs. These hubs are actuated by high-torque DS3218 digital servos capable of sweeping the entire propulsion system 90 degrees forward for surface travel.
 
-1. Power Domains: To prevent inductive voltage spikes from resetting the logic core, power is strictly isolated into two domains. The "Muscle Domain" draws directly from the 4S 6200mAh LiPo battery through a Matek PDB and a 5A UBEC to drive the 30A ESCs and the high-torque DS3218 vectoring servos at 7V-11V. The "Logic Domain" steps voltage down to a clean 3.3V via an AP2112K LDO regulator to power the ESP32-S3, the MPU6050 IMU, and the VL53L1X altimeter.
-2. Structural Assembly: The chassis is fabricated using rigid, lightweight 3d printed components. The four A2212 1400KV BLDC motors are mounted on pivoting brackets connected to the servos, allowing a 90deg dynamic sweep.
-3. Multi-Domain Mobility: Along with rubber tires , 190mm Extruded Polystyrene (XPS) closed-cell foam base are attached to the chassis. These provide passive mechanical suspension on pavement and displace enough water (approx. 4.8 Liters) to act as unsinkable buoyancy floats, keeping the central electronics housing safe from water ingress.
+Custom Electronics (PCB): A custom-designed ESP32-S3 flight controller serves as the system's brain.
 
-### Software Implementation
+Power Distribution: The board features an isolated dual-power architecture. A high-current 5V rail (with a large bulk capacitor) drives the vectoring servos, while a dedicated AP2112K LDO regulator provides clean 3.3V power to the logic circuits, preventing brownouts.
 
-The firmware is written in Embedded C/C++ using the Arduino IDE and is built upon the FreeRTOS (Real-Time Operating System) framework.
+Sensors: An MPU-6050 IMU and MS5607 barometer are mounted on the bottom layer of the PCB to shield them from thermal output and RF noise. An HC-SR04 ultrasonic sensor is integrated using a hardware voltage divider to safely step down the 5V echo pulse to the 3.3V logic level.
 
-1. Dual-Core Architecture: Task allocation is split across the two cores of the ESP32-S3 to ensure zero latency in critical flight calculations. Core 0 is exclusively dedicated to reading the MPU6050 via I2C, running the Kalman filter, and calculating the high-frequency PID (Proportional-Integral-Derivative) stabilization loops for pitch, roll, and yaw. Core 1 handles non-critical timing tasks, including the transitional state machine (coordinating the servo sweep angles), calculating battery voltage telemetry, and managing the ESP-NOW 2.4GHz peer-to-peer control link.
-2. State Machine: A custom dynamic mixing algorithm smoothly blends standard quadcopter multirotor logic into forward-thrust airboat logic as the servos transition from 0degto 90deg.
----
+Software Implementation
+Firmware Architecture: To handle the shape-shifting mechanics, the firmware was written entirely from scratch using C++ and FreeRTOS, bypassing the limitations of standard multirotor software.
+
+Dual-Core Processing: The ESP32-S3’s dual-core capabilities are fully leveraged to ensure real-time stability:
+
+Core 0 (Sensor Fusion): Dedicated exclusively to polling the IMU, barometer, and ultrasonic sensors. It calculates altitude and pressure to autonomously detect the operating domain (Air, Land, or Water).
+
+Core 1 (Motor & PID Control): Strictly isolated to handle the high-speed PID stabilization loops and PWM timing for the ESCs and servos.
+
+Concurrency & Safety: Hardware mutex locks are implemented to allow the two cores to share telemetry data safely. This guarantees that environmental sensor reads never delay the critical motor control loops, enabling instantaneous thrust-vectoring when transitioning between terrains.
 
 ## Code Structure
 
@@ -540,12 +542,6 @@ ETC.
 | Paper Link                |                                                           |
 
 ---
-
-## References
-
-Add references in IEEE format.
-
-Example:
 
 ## References
 
