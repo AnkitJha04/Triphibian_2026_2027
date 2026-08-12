@@ -89,13 +89,13 @@ This project will cover the following key areas:
 
 Existing unmanned robotic systems are generally designed for operation in a specific environment. They can broadly be classified as follows:
 
-| Platform | Strength | Main Limitation |
-|---|---|---|
-| **UAV**               | Fast aerial movement and access to difficult locations | High energy consumption and limited endurance |
-| **UGV**               | Efficient and stable terrestrial operation             | Restricted by water, steep terrain and other obstacles |
-| **USV**               | Efficient operation on surface water                   | Limited terrestrial mobility |
-| **Dual-Mode Robot**   | Capable of operating in two environments               | Cannot independently access the third environment |
-| **Triphibious Robot** | Potential to operate in air, land and water            | Higher mass, mechanical complexity and control requirements |
+| Platform          | Strength                                               | Main Limitation                                             |
+|---                |---                                                     |---                                                          |
+| UAV               | Fast aerial movement and access to difficult locations | High energy consumption and limited endurance               |
+| UGV               | Efficient and stable terrestrial operation             | Restricted by water, steep terrain and other obstacles      |
+| USV               | Efficient operation on surface water                   | Limited terrestrial mobility                                |
+| Dual-Mode Robot   | Capable of operating in two environments               | Cannot independently access the third environment           |
+| Triphibious Robot | Potential to operate in air, land and water            | Higher mass, mechanical complexity and control requirements |
 
 Research has demonstrated the feasibility of combining multiple modes of locomotion within a single robotic platform. Existing triphibious and multimodal systems have explored approaches such as shared propulsion systems, tilting or morphing mechanisms and integrated mobility structures.
 
@@ -134,16 +134,14 @@ Buoyant wheel/body elements keep the electronics and major structure above the w
 
 Control System : 
 An ESP32-S3-class controller is currently proposed for prototype-level control, handling functions such as:
+1) Stabilization/PID control,
+2) IMU and navigation sensor processing,
+3) Propulsion commands,
+4) Servo actuation,
+5) Mode management,
+6) Telemetry,
+7) Waypoint navigation.
 
-stabilization/PID control,
-IMU and navigation sensor processing,
-propulsion commands,
-servo actuation,
-mode management,
-telemetry,
-waypoint navigation.
-
-For a research prototype this is reasonable, although a dedicated flight controller or higher-reliability compute architecture may eventually be appropriate as autonomy and safety requirements increase.
 
 Expected Benefits :
 
@@ -198,8 +196,8 @@ That is a much stronger and more realistic technical proposition.
 
                      ┌─────────────────────────────┐
                      │       POWER SYSTEM          │
-                     │  4S 6200 mAh LiPo Battery  │
-                     │  Power Distribution / BEC  │
+                     │  4S 6200 mAh LiPo Battery   │
+                     │  Power Distribution / BEC   │
                      └─────────────────────────────┘
 
 ```markdown
@@ -233,7 +231,7 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 | 10      | Buoyancy System         | Lightweight waterproof floats/body |    1 set | Provides stability and flotation on water         |
 | 11      | Power Distribution/BEC  | 4S compatible                      |        1 | Distributes and regulates electrical power        |
 | 12      | Telemetry System        | Wireless bidirectional link        |        1 | Operator commands and vehicle telemetry           |
-| 13      | Camera                 | Lightweight onboard camera         |        1 | Visual feedback/perception                        |
+| 13      | Camera                  | Lightweight onboard camera         |        1 | Visual feedback/perception                        |
 | 14      | Frame & Mounting System | Lightweight rigid structure        |        1 | Supports all mechanical and electronic components |
 | 15      | Flight Controller       | Custom                             |        1 | For functioning of everything perfectly           |
 ---
@@ -276,25 +274,15 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 ## Methodology
 
 1. **Literature Survey:** Study existing multimodal and triphibious robotic platforms to understand their propulsion mechanisms, mobility approaches, control strategies and limitations.
-
 2. **Problem Identification and Requirement Analysis:** Identify the major challenges involved in combining air, land and water mobility and establish the mechanical, electrical and performance requirements of RiftWalker.
-
 3. **Concept Development:** Evaluate different multi-terrain mechanisms and finalize the use of a unified BLDC propulsion system with a **servo-based thrust vectoring mechanism**.
-
 4. **Mechanical Design:** Develop the **3D CAD model in Fusion 360**, including the structural frame, motor mounts, servo tilting mechanism, wheels, buoyancy elements and electronics enclosure.
-
 5. **Engineering Analysis:** Perform weight estimation, thrust-to-weight ratio, servo torque, battery and power, land mobility and buoyancy calculations to evaluate the feasibility of the proposed design.
-
 6. **Simulation and Design Validation:** Validate the proposed mechanical concept and operating principle through simulation and analysis, and modify the design based on the obtained results.
-
 7. **Electronic System Development:** Design the custom **ESP32-S3 based flight controller PCB** in KiCad, including power management, motor and servo interfaces, sensor interfaces, USB-C programming and battery monitoring.
-
 8. **PCB Verification and Hardware Integration:** Perform schematic checks, ERC/DRC verification and PCB routing, followed by fabrication and integration of the controller with the motors, servos, sensors and power system.
-
 9. **Firmware and Control Development:** Develop the ESP32-S3 firmware for sensor processing, stabilization, motor and servo control, communication and operating-mode management.
-
 10. **Testing and Validation:** Test the integrated prototype in air, land and surface-water modes and evaluate parameters such as stability, mobility, thrust-vectoring response, power consumption and transition behaviour.
-
 11. **Performance Analysis and Documentation:** Compare experimental results with calculated design values, identify limitations and improvements, and document the complete design, implementation and testing process.
 
 ---
