@@ -318,7 +318,7 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 | **Week 12**  | Firmware Development & System Testing                              | Pending     |
 | **Week 13**  | Final Testing, Documentation & Project Demonstration               | Pending     |
 | **Week 14**  | Research Paper Writing & Project Documentation                     | Pending     |
-| **Week 15**  | Final Presentation & Project Demonstration                         |  Pending    |
+| **Week 15**  | Final Presentation & Project Demonstration                         | Pending     |
 
 ---
 
@@ -338,17 +338,6 @@ Students must update this section every week.
 | **7** | 03/08–09/08 | ESP32-S3 schematic & component selection       | PCB routing & verification    | GPIO & power management           | — |
 | **8** | 10/08–16/08 | PCB routing, ERC/DRC & documentation           | PCB fabrication & procurement | Routing & component placement     | — |
 
-
-| Week   | Date | Work Completed | Work Planned for Next Week | Issues / Challenges | GitHub Commit Link |
-| ------ | ---- | -------------- | -------------------------- | ------------------- | ------------------ |
-| Week 1 |      |                |                            |                     |                    |
-| Week 2 |      |                |                            |                     |                    |
-| Week 3 |      |                |                            |                     |                    |
-| Week 4 |      |                |                            |                     |                    |
-| Week 5 |      |                |                            |                     |                    |
-| Week 6 |      |                |                            |                     |                    |
-| Week 7 |      |                |                            |                     |                    |
-| Week 8 |      |                |                            |                     |                    |
 
 ---
 
@@ -570,11 +559,17 @@ Add references in IEEE format.
 
 Example:
 
-```text
-[1] A. Author, B. Author, "Title of the Paper," Journal/Conference Name, vol. X, no. Y, pp. xx-yy, Year.
-[2] Datasheet / Website / Book reference.
-```
+## References
 
+[1] G. Zhong, J. Cao, X. Chai, and Y. Bai, "Design and Performance Analysis of a Triphibious Robot with Tilting-Rotor Structure," *IEEE Access*, vol. 9, pp. 10871–10879, 2021, doi: 10.1109/ACCESS.2021.3050182.
+
+[2] X. Li, M. Lai, M. Zhang, J. Lin, T. Lai, J. Zhi, C. Xu, F. Gao, Y. Cao, "TriphiBot: A Triphibious Robot Combining FOC-based Propulsion with Eccentric Design," arXiv preprint arXiv:2602.01385, 2026.
+
+[3] M. Xia, B. Wang, and Z. Luo, "Design and Experiment of a Multimodal Aerial Aquatic Vehicle with Morphing Wing and Tilting Rotors," *Advances in Mechanical Engineering*, vol. 17, 2025, doi: 10.1177/16878132251319142.
+
+[4] S. L. Pradeep Kumar, B. Deeban, D. Santhosh Kumar, and M. Sasi Kumar, "Design and Fabrication of a Multi-Terrain Triphibian Quadcopter for Airborne, Terrestrial, and Aquatic Mobility," *Discover Mechanical Engineering*, vol. 5, art. no. 20, 2026, doi: 10.1007/s44245-025-00167-7.
+
+[5] Z. Zheng, Q. Cai, J. Wang, X. Xu, M. Cao, H. Yu, J. Li, J. Meng, and G. Lu, "CapsuleBot: A Novel Hybrid Aerial-Ground Bi-Copter Robot With Two Actuated-Wheel-Rotors," *IEEE Robotics and Automation Letters*, vol. 10, no. 1, pp. 120–127, 2025, doi: 10.1109/LRA.2024.3504232.
 ---
 
 ## Repository Update Guidelines
