@@ -50,13 +50,28 @@ The expected outcome is a functional prototype demonstrating controlled movement
 
 ## Objectives
 
-1. To study existing multimodal robotic platforms and identify limitations associated with operating separate UAV, UGV and waterborne systems.
-2. To design a lightweight triphibious architecture capable of aerial, terrestrial and surface-water operation while sharing major propulsion, power and control components.
-3. To develop the mechanical and electronic prototype, including propulsion, motor-vectoring mechanism, wheels, buoyancy system, sensors, power electronics and onboard control.
-4. To implement the control and navigation system for stabilization, mode switching, sensor processing, waypoint navigation and human-in-the-loop operation.
-5. To experimentally test and validate flight, ground movement, water movement, stability, transition behaviour, speed, endurance and power consumption.
-6. To compare measured results with calculated design values and identify the efficiency penalties introduced by combining three mobility modes.
-7. To document the complete design, implementation and experimental results for academic presentation and potential publication.
+## Objectives
+
+## Objectives
+
+1. To study existing **multimodal and triphibious robotic platforms** and identify the challenges associated with integrating aerial, terrestrial and surface-water mobility into a single robotic system.
+
+2. To develop a **3D CAD model** of the RiftWalker incorporating the structural frame, BLDC motor assemblies, servo-based tilting mechanism, wheels, buoyancy elements and electronics enclosure.
+
+3. To design a **servo-based thrust vectoring mechanism** that changes the orientation of the BLDC propulsion units to enable different modes of locomotion using a unified propulsion system.
+
+4. To perform **engineering calculations and feasibility analysis** including component-wise weight estimation, thrust-to-weight ratio, servo torque, battery and power requirements, land mobility, and water buoyancy.
+
+5. To develop a custom **ESP32-S3 based flight controller PCB** integrating power management, motor and servo interfaces, USB-C programming, battery voltage monitoring and required sensor interfaces.
+
+6. To integrate onboard sensors including the **MPU6050 IMU, magnetometer, barometer, ultrasonic sensor and water sensor** for orientation, altitude, obstacle and environmental-state monitoring.
+
+7. To validate the proposed mechanical and electronic design through **simulation, PCB ERC/DRC verification and prototype testing**, ensuring that the system meets the defined design requirements.
+
+8. To fabricate and integrate the mechanical, electronic and control subsystems and evaluate the **air, land and surface-water operating modes** of the RiftWalker prototype.
+
+9. To document the complete design process, calculations, implementation, testing and results, and identify **future improvements and applications** of the proposed multi-terrain robotic platform.
+
 
 ---
 
@@ -64,35 +79,43 @@ The expected outcome is a functional prototype demonstrating controlled movement
 
 This project will cover the following key areas:
 
-1. Design and development of prototype: Physical construction of the RiftWalker airframe.
-2. Hardware implementation: Assembly and integration of the custom mixed-signal PCB, actuators, and propulsion systems.
-3. Software/wireless interface: Firmware programming using FreeRTOS for dual-core task allocation (PID loops and sensor fusion) and the implementation of a low-latency ESP-NOW ground control link.
-4. Data collection and testing: Real-world validation of transition stability, payload capacity, and buoyancy.
-5. Performance analysis: Evaluating power efficiency, battery endurance curves, and thrust-to-weight ratios across different modes of locomotion.
+1) **3D mechanical design** and development of the servo-based thrust vectoring mechanism.
+2) Selection and integration of **BLDC motors, ESCs, servos, wheels and buoyancy elements**.
+3) Design of a custom **ESP32-S3 based flight controller PCB** with sensor, motor and servo interfaces.
+4) Integration of sensors including **MPU6050, magnetometer, barometer, ultrasonic and water sensors**.
+5) **Engineering calculations and simulation** for weight, thrust, torque, power and buoyancy.
+6) Prototype fabrication, hardware integration and **testing of air, land and water operation**.
+7) Performance evaluation and documentation of the developed system.
 
 ---
 
 ## Existing System
 
-Current unmanned robotic systems can broadly be divided into:
-| Platform              | Strength                            | Main limitation                                        |
-| --------------------- | ----------------------------------- | ------------------------------------------------------ |
-| **UAV**               | Fast, obstacle-independent movement | High energy consumption and relatively short endurance |
-| **UGV**               | Efficient terrestrial operation     | Terrain and water obstacles restrict mobility          |
-| **USV**               | Efficient surface-water operation   | Cannot independently traverse most land obstacles      |
-| **Dual-mode robot**   | Operates in two domains             | Third domain remains inaccessible                      |
-| **Triphibious robot** | Potential three-domain operation    | Increased mass, control and mechanical complexity      |
+Existing unmanned robotic systems are generally designed for operation in a specific environment. They can broadly be classified as follows:
 
-Triphibious robotics itself is not unprecedented. Air-land-water prototypes have appeared in published research, including designs using morphing structures, shared propulsion and minimalist wheel arrangements. Recent work continues to focus specifically on reducing the actuator count and improving propulsion efficiency.The key research gap is therefore not simply making a robot that can fly, drive and move on water. The meaningful engineering challenge is doing so while maintaining acceptable:
-weight → energy efficiency → mechanical simplicity → controllability → useful endurance.
+| Platform | Strength | Main Limitation |
+|---|---|---|
+| **UAV** | Fast aerial movement and access to difficult locations | High energy consumption and limited endurance |
+| **UGV** | Efficient and stable terrestrial operation | Restricted by water, steep terrain and other obstacles |
+| **USV** | Efficient operation on surface water | Limited terrestrial mobility |
+| **Dual-Mode Robot** | Capable of operating in two environments | Cannot independently access the third environment |
+| **Triphibious Robot** | Potential to operate in air, land and water | Higher mass, mechanical complexity and control requirements |
 
-Limitations of existing systems:
-1. High cost and poor scalability: Deploying a fleet of separate air, land, and water robots requires complex logistics, multiple operators, and heavy transport infrastructure.
-2. Low endurance: Aerial drones must constantly fight gravity, severely limiting mission time (typically under 20 minutes).
-3. Environmental deadlocks: UGVs are stopped by floods or rubble; boats are stranded by sandbars or thick aquatic vegetation.
-4. Mechanical bloat: Existing "amphibious" vehicles often use dual drivetrains (e.g., adding heavy wheel motors to a drone chassis or underwater propellers to a rover), which drastically increases weight and ruins the aerodynamic thrust-to-weight ratio.
+Research has demonstrated the feasibility of combining multiple modes of locomotion within a single robotic platform. Existing triphibious and multimodal systems have explored approaches such as shared propulsion systems, tilting or morphing mechanisms and integrated mobility structures.
 
-That is the problem RiftWalker should attempt to investigate.
+However, combining three different modes of locomotion introduces several engineering challenges, particularly in terms of **weight, energy efficiency, mechanical complexity, controllability and endurance**.
+
+# Limitations of Existing Systems
+
+1. **Multiple System Requirement:** Using separate UAV, UGV and waterborne platforms increases equipment, transportation and operational complexity.
+
+2. **Limited Endurance:** Aerial systems require continuous thrust to remain airborne, resulting in significant power consumption.
+
+3. **Terrain Limitations:** Ground robots may be restricted by water or difficult terrain, while waterborne platforms cannot easily overcome land-based obstacles.
+
+4. **Increased Mechanical Complexity:** Combining separate propulsion and mobility mechanisms for different environments can increase the overall weight, power requirements and mechanical complexity of the system.
+
+These limitations motivate the development of **RiftWalker**, which investigates the feasibility of combining aerial, terrestrial and surface-water mobility within a single robotic platform while sharing major propulsion, power and control components.
 
 ---
 
@@ -255,6 +278,20 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 ## Methodology
 
 1. Literature Survey: Extensive study of the current terrain-locking problems in disaster response and analysis of existing dual-drivetrain (heavy) hybrid robotic solutions.
+
+Literature Survey
+Recent advancements in robotics have led to the development of multi-terrain robotic platforms capable of operating across different environments such as land, air, and water. Researchers have explored various propulsion systems, mechanical designs, and control strategies to improve mobility and adaptability. Several research papers were studied to understand the current state of triphibious robotic systems and identify their strengths and limitations.
+The paper "Design and Performance Analysis of A Triphibious Robot with Tilting-Rotor Structure" (2020) presents a robot capable of operating in air, land, and water using a tilt-rotor mechanism. The robot changes the orientation of its propellers to switch between different modes of locomotion. This work demonstrated that thrust vectoring is an effective method for multi-terrain mobility and served as the primary inspiration for our servo-based tilting mechanism.
+The paper "TriphiBot: A Triphibious Robot" (2026) proposed a robot that uses a unified propulsion system for movement across all three terrains. Instead of employing separate mechanisms for each mode, the same motors are reused, resulting in reduced system complexity and weight. This concept aligns closely with our design philosophy of using a single propulsion system.
+The research paper "Design and Experiment of a Multimodal Aerial-Aquatic Vehicle with Morphing Wing and Tilting Rotors" introduced a reconfigurable structure with tilting rotors capable of switching between aerial and aquatic operation. The study validated that changing the rotor angle significantly improves operational flexibility, supporting the thrust-vectoring approach adopted in our project.
+The paper "Design and Fabrication of a Multi-Terrain Triphibian Quadcopter" focused on practical applications such as agriculture, inspection, and disaster management. It highlighted the importance of multi-terrain robots in real-world scenarios where a single platform can reduce operational costs and improve mission efficiency. This motivated the application areas considered for RiftWalker.
+Another relevant work, "CapsuleBot: Hybrid Aerial-Ground Robot" (2023), demonstrated the concept of sharing the same actuators for both flying and rolling modes. The study emphasized efficient hardware utilization and inspired our approach of minimizing additional mechanical components while maximizing mobility.
+After reviewing these studies, it was observed that although existing robots successfully demonstrate multi-terrain operation, many designs involve complex mechanisms, higher manufacturing costs, or are optimized for only two modes of locomotion. Our proposed project, RiftWalker, builds upon these concepts by implementing a lightweight servo-based thrust vectoring mechanism, a custom ESP32-S3 flight controller PCB, integrated sensors, and a modular design suitable for student-level development while maintaining the capability to operate across air, land, and water.
+
+
+
+
+
 2. Problem Identification: Identifying the weight penalty of multiple drive systems as the primary factor limiting the endurance of current amphibious robots.
 3. Requirement Analysis: Calculating the required thrust-to-weight ratio (targeting 2.15:1), servo holding torque under dynamic flight loads, and required XPS volumetric buoyancy.
 4. System Design: Drafting the physical 3D CAD model, conducting aerodynamic CFD simulations, and routing the custom ESP32-S3 flight controller schematic.
