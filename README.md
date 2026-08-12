@@ -200,9 +200,7 @@ That is a much stronger and more realistic technical proposition.
                      │  Power Distribution / BEC   │
                      └─────────────────────────────┘
 
-```markdown
-![System Architecture](images/system architecture.jpeg)
-````
+![RiftWalker System Architecture](images/system_architecture.jpeg)
 
 The RiftWalker system architecture is divided into four main sections:
 
@@ -338,21 +336,15 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 
 ## Circuit Diagram
 
-
-```markdown
-![Circuit Diagram](images/circuit diagram.jpeg)
-```
+![RiftWalker Circuit Diagram](images/circuit_diagram.jpeg)
 
 ---
 
 ## Flowchart / Algorithm
 
+![RiftWalker Flowchart](images/flowchart.jpeg)
 
-```markdown
-![Flowchart](images/flowchart.jpeg)
-```
-
-### Algorithm
+## Algorithm
 
 1. System Initialization – Power up the ESP32-S3 and initialize the IMU, GNSS/NavIC, altitude sensor, ESCs, servos and communication modules.
 2. Self-Test & Health Check – Verify sensor communication, battery voltage, telemetry link and actuator status. Prevent arming if a critical fault is detected.
