@@ -335,7 +335,7 @@ Students must update this section every week.
 | File Type             | File Name / Link                                 | Description                                          |
 |--                     |---                                               |---                                                   |
 | **CAD Model**         | [Autodesk Inventor CAD Files](hardware/CAD/)     | 3D mechanical model and assembly of RiftWalker       |
-| **Circuit Diagram**   | [KiCad Schematic](images/circuit_diagram-2.jpeg) | Custom ESP32-S3 flight-controller schematic          |
+| **Circuit Diagram**   | [KiCad Schematic](images/circuit_diagram-2.jpg) | Custom ESP32-S3 flight-controller schematic          |
 | **PCB Design**        | [KiCad PCB Files](hardware/PCB/)                 | Custom flight-controller PCB design and routing      |
 | **ERC / DRC Reports** | [PCB Verification Files](hardware/PCB/)          | Electrical and design rule verification reports      |
 | **Flowchart**         | [System Flowchart](images/flowchart.jpeg)        | Proposed operating sequence and control flow         |
