@@ -50,10 +50,6 @@ The expected outcome is a functional prototype demonstrating controlled movement
 
 ## Objectives
 
-## Objectives
-
-## Objectives
-
 1. To study existing **multimodal and triphibious robotic platforms** and identify the challenges associated with integrating aerial, terrestrial and surface-water mobility into a single robotic system.
 
 2. To develop a **3D CAD model** of the RiftWalker incorporating the structural frame, BLDC motor assemblies, servo-based tilting mechanism, wheels, buoyancy elements and electronics enclosure.
@@ -95,11 +91,11 @@ Existing unmanned robotic systems are generally designed for operation in a spec
 
 | Platform | Strength | Main Limitation |
 |---|---|---|
-| **UAV** | Fast aerial movement and access to difficult locations | High energy consumption and limited endurance |
-| **UGV** | Efficient and stable terrestrial operation | Restricted by water, steep terrain and other obstacles |
-| **USV** | Efficient operation on surface water | Limited terrestrial mobility |
-| **Dual-Mode Robot** | Capable of operating in two environments | Cannot independently access the third environment |
-| **Triphibious Robot** | Potential to operate in air, land and water | Higher mass, mechanical complexity and control requirements |
+| **UAV**               | Fast aerial movement and access to difficult locations | High energy consumption and limited endurance |
+| **UGV**               | Efficient and stable terrestrial operation             | Restricted by water, steep terrain and other obstacles |
+| **USV**               | Efficient operation on surface water                   | Limited terrestrial mobility |
+| **Dual-Mode Robot**   | Capable of operating in two environments               | Cannot independently access the third environment |
+| **Triphibious Robot** | Potential to operate in air, land and water            | Higher mass, mechanical complexity and control requirements |
 
 Research has demonstrated the feasibility of combining multiple modes of locomotion within a single robotic platform. Existing triphibious and multimodal systems have explored approaches such as shared propulsion systems, tilting or morphing mechanisms and integrated mobility structures.
 
@@ -277,28 +273,29 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 
 ## Methodology
 
-1. Literature Survey: Extensive study of the current terrain-locking problems in disaster response and analysis of existing dual-drivetrain (heavy) hybrid robotic solutions.
+## Methodology
 
-Literature Survey
-Recent advancements in robotics have led to the development of multi-terrain robotic platforms capable of operating across different environments such as land, air, and water. Researchers have explored various propulsion systems, mechanical designs, and control strategies to improve mobility and adaptability. Several research papers were studied to understand the current state of triphibious robotic systems and identify their strengths and limitations.
-The paper "Design and Performance Analysis of A Triphibious Robot with Tilting-Rotor Structure" (2020) presents a robot capable of operating in air, land, and water using a tilt-rotor mechanism. The robot changes the orientation of its propellers to switch between different modes of locomotion. This work demonstrated that thrust vectoring is an effective method for multi-terrain mobility and served as the primary inspiration for our servo-based tilting mechanism.
-The paper "TriphiBot: A Triphibious Robot" (2026) proposed a robot that uses a unified propulsion system for movement across all three terrains. Instead of employing separate mechanisms for each mode, the same motors are reused, resulting in reduced system complexity and weight. This concept aligns closely with our design philosophy of using a single propulsion system.
-The research paper "Design and Experiment of a Multimodal Aerial-Aquatic Vehicle with Morphing Wing and Tilting Rotors" introduced a reconfigurable structure with tilting rotors capable of switching between aerial and aquatic operation. The study validated that changing the rotor angle significantly improves operational flexibility, supporting the thrust-vectoring approach adopted in our project.
-The paper "Design and Fabrication of a Multi-Terrain Triphibian Quadcopter" focused on practical applications such as agriculture, inspection, and disaster management. It highlighted the importance of multi-terrain robots in real-world scenarios where a single platform can reduce operational costs and improve mission efficiency. This motivated the application areas considered for RiftWalker.
-Another relevant work, "CapsuleBot: Hybrid Aerial-Ground Robot" (2023), demonstrated the concept of sharing the same actuators for both flying and rolling modes. The study emphasized efficient hardware utilization and inspired our approach of minimizing additional mechanical components while maximizing mobility.
-After reviewing these studies, it was observed that although existing robots successfully demonstrate multi-terrain operation, many designs involve complex mechanisms, higher manufacturing costs, or are optimized for only two modes of locomotion. Our proposed project, RiftWalker, builds upon these concepts by implementing a lightweight servo-based thrust vectoring mechanism, a custom ESP32-S3 flight controller PCB, integrated sensors, and a modular design suitable for student-level development while maintaining the capability to operate across air, land, and water.
+1. **Literature Survey:** Study existing multimodal and triphibious robotic platforms to understand their propulsion mechanisms, mobility approaches, control strategies and limitations.
 
+2. **Problem Identification and Requirement Analysis:** Identify the major challenges involved in combining air, land and water mobility and establish the mechanical, electrical and performance requirements of RiftWalker.
 
+3. **Concept Development:** Evaluate different multi-terrain mechanisms and finalize the use of a unified BLDC propulsion system with a **servo-based thrust vectoring mechanism**.
 
+4. **Mechanical Design:** Develop the **3D CAD model in Fusion 360**, including the structural frame, motor mounts, servo tilting mechanism, wheels, buoyancy elements and electronics enclosure.
 
+5. **Engineering Analysis:** Perform weight estimation, thrust-to-weight ratio, servo torque, battery and power, land mobility and buoyancy calculations to evaluate the feasibility of the proposed design.
 
-2. Problem Identification: Identifying the weight penalty of multiple drive systems as the primary factor limiting the endurance of current amphibious robots.
-3. Requirement Analysis: Calculating the required thrust-to-weight ratio (targeting 2.15:1), servo holding torque under dynamic flight loads, and required XPS volumetric buoyancy.
-4. System Design: Drafting the physical 3D CAD model, conducting aerodynamic CFD simulations, and routing the custom ESP32-S3 flight controller schematic.
-5. Hardware/Software Development: Fabricating the physical carbon-fiber frame, assembling the surface-mount PCB, and programming the FreeRTOS state-machine firmware.
-6. Integration: Mating the 3.3V Logic domain (sensors) with the 7V/11V Muscle domain (ESCs and servos) and establishing the ESP-NOW ground station link.
-7. Testing and Validation: Conducting real-world PID tuning in a test rig, followed by transition testing (Air to Land, Land to Water) to validate structural stability and power efficiency.
-8. Documentation and Publication: Compiling the final PCB verification reports, dynamic load analyses, hardware-in-the-loop simulation data, and the final project presentation.
+6. **Simulation and Design Validation:** Validate the proposed mechanical concept and operating principle through simulation and analysis, and modify the design based on the obtained results.
+
+7. **Electronic System Development:** Design the custom **ESP32-S3 based flight controller PCB** in KiCad, including power management, motor and servo interfaces, sensor interfaces, USB-C programming and battery monitoring.
+
+8. **PCB Verification and Hardware Integration:** Perform schematic checks, ERC/DRC verification and PCB routing, followed by fabrication and integration of the controller with the motors, servos, sensors and power system.
+
+9. **Firmware and Control Development:** Develop the ESP32-S3 firmware for sensor processing, stabilization, motor and servo control, communication and operating-mode management.
+
+10. **Testing and Validation:** Test the integrated prototype in air, land and surface-water modes and evaluate parameters such as stability, mobility, thrust-vectoring response, power consumption and transition behaviour.
+
+11. **Performance Analysis and Documentation:** Compare experimental results with calculated design values, identify limitations and improvements, and document the complete design, implementation and testing process.
 
 ---
 
@@ -321,13 +318,26 @@ After reviewing these studies, it was observed that although existing robots suc
 | **Week 12**  | Firmware Development & System Testing                              | Pending     |
 | **Week 13**  | Final Testing, Documentation & Project Demonstration               | Pending     |
 | **Week 14**  | Research Paper Writing & Project Documentation                     | Pending     |
-| **Week 15**  | Black Book Preparation, Final Presentation & Project Demonstration | Pending     |
+| **Week 15**  | Final Presentation & Project Demonstration                         |  Pending    |
 
 ---
 
 ## Weekly Progress Updates
 
+## Weekly Progress Updates
+
 Students must update this section every week.
+| Week  | Date        |                  Work Completed                |             Next Week         |         Issues / Challenges       | GitHub Commit |
+|---    |---          |---                                             |---                            |---                                |---|
+| **1** | 22/06–28/06 | Problem finalization & planning                | Literature survey             | Concept feasibility               | — |
+| **2** | 29/06–05/07 | Literature survey & paper review               | Requirement analysis          | Mobility vs. weight               | — |
+| **3** | 06/07–12/07 | Requirements & components finalized            | Engineering calculations      | Weight, thrust & cost             | — |
+| **4** | 13/07–19/07 | Weight, thrust, torque & buoyancy calculations | Mechanical design             | Maintaining low weight            | — |
+| **5** | 20/07–26/07 | 3D CAD model & mechanical design               | Design validation & PCB       | Mechanism integration             | — |
+| **6** | 27/07–02/08 | Design validation & simulation                 | PCB schematic                 | Mechanical-electronic integration | — |
+| **7** | 03/08–09/08 | ESP32-S3 schematic & component selection       | PCB routing & verification    | GPIO & power management           | — |
+| **8** | 10/08–16/08 | PCB routing, ERC/DRC & documentation           | PCB fabrication & procurement | Routing & component placement     | — |
+
 
 | Week   | Date | Work Completed | Work Planned for Next Week | Issues / Challenges | GitHub Commit Link |
 | ------ | ---- | -------------- | -------------------------- | ------------------- | ------------------ |
