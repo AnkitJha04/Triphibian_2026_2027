@@ -327,7 +327,14 @@ Students must update this section every week.
 
 ## Design Files
 
-Upload and link all design files here.
+## Design Files
+
+| File Type             | File Name / Link                              | Description                                     |
+|--                     |---                                            |---                                              |
+| **CAD Model**         | [Autodesk Inventor CAD Files](hardware/CAD/)  | 3D mechanical model and assembly of RiftWalker  |
+| **Circuit Diagram**   | [KiCad Schematic](hardware/PCB/)              | Custom ESP32-S3 flight-controller schematic     |
+| **PCB Design**        | [KiCad PCB Files](hardware/PCB/)              | Custom flight-controller PCB design and routing |
+| **ERC / DRC Reports** | [PCB Verification Files](hardware/PCB/)       | Electrical and design rule verification reports |
 
 | File Type       | File Name / Link | Description |
 | --------------- | ---------------- | ----------- |
