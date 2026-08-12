@@ -200,7 +200,9 @@ That is a much stronger and more realistic technical proposition.
                      │  Power Distribution / BEC   │
                      └─────────────────────────────┘
 
-![RiftWalker System Architecture](images/system_architecture.jpeg)
+```markdown
+![System Architecture](images/system_architecture.jpeg)
+```
 
 The RiftWalker system architecture is divided into four main sections:
 
@@ -336,13 +338,21 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 
 ## Circuit Diagram
 
-![RiftWalker Circuit Diagram](images/circuit_diagram.jpeg)
+Add circuit diagram image here.
+
+```markdown
+![Circuit Diagram](images/circuit_diagram.jpeg)
+```
 
 ---
 
 ## Flowchart / Algorithm
 
-![RiftWalker Flowchart](images/flowchart.jpeg)
+
+```markdown
+![Flowchart](images/flowchart.jpeg)
+```
+
 
 ## Algorithm
 
