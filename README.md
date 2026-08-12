@@ -201,7 +201,7 @@ That is a much stronger and more realistic technical proposition.
                      └─────────────────────────────┘
 
 ```markdown
-![System Architecture](images/system_architecture.png)
+![System Architecture](images/system_architecture.jpeg)
 ````
 
 The RiftWalker system architecture is divided into four main sections:
@@ -344,7 +344,7 @@ Students must update this section every week.
 Add circuit diagram image here.
 
 ```markdown
-![Circuit Diagram](images/circuit_diagram.png)
+![Circuit Diagram](images/circuit_diagram.jpeg)
 ```
 
 ---
@@ -354,7 +354,7 @@ Add circuit diagram image here.
 Add flowchart image here.
 
 ```markdown
-![Flowchart](images/flowchart.png)
+![Flowchart](images/flowchart.jpeg)
 ```
 
 ### Algorithm
