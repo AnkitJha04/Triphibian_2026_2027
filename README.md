@@ -341,21 +341,15 @@ Students must update this section every week.
 
 ## Circuit Diagram
 
-Add circuit diagram image here.
-
-```markdown
-![Circuit Diagram](images/circuit_diagram.jpeg)
-```
+![RiftWalker Circuit Diagram](images/circuit_diagram.jpeg)
 
 ---
 
 ## Flowchart / Algorithm
 
-Add flowchart image here.
+![RiftWalker Flowchart](images/flowchart.jpeg)
 
-```markdown
-![Flowchart](images/flowchart.jpeg)
-```
+
 
 ### Algorithm
 
