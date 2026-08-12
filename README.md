@@ -201,7 +201,7 @@ That is a much stronger and more realistic technical proposition.
                      └─────────────────────────────┘
 
 ```markdown
-![System Architecture](images/system_architecture.png)
+![System Architecture](images/system architecture.jpeg)
 ````
 
 The RiftWalker system architecture is divided into four main sections:
@@ -308,9 +308,6 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 
 ## Weekly Progress Updates
 
-## Weekly Progress Updates
-
-Students must update this section every week.
 | Week  | Date        |                  Work Completed                |             Next Week         |         Issues / Challenges       | GitHub Commit |
 |------ |------------ |----------------------------------------------- |------------------------------ |---------------------------------- |-------------- |
 | **1** | 22/06–28/06 | Problem finalization & planning                | Literature survey             | Concept feasibility               | —             |
@@ -341,20 +338,18 @@ Students must update this section every week.
 
 ## Circuit Diagram
 
-Add circuit diagram image here.
 
 ```markdown
-![Circuit Diagram](images/circuit_diagram.png)
+![Circuit Diagram](images/circuit diagram.jpeg)
 ```
 
 ---
 
 ## Flowchart / Algorithm
 
-Add flowchart image here.
 
 ```markdown
-![Flowchart](images/flowchart.png)
+![Flowchart](images/flowchart.jpeg)
 ```
 
 ### Algorithm
