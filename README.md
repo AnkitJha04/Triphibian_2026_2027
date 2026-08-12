@@ -335,12 +335,6 @@ Students must update this section every week.
 | **Circuit Diagram**   | [KiCad Schematic](hardware/PCB/)              | Custom ESP32-S3 flight-controller schematic     |
 | **PCB Design**        | [KiCad PCB Files](hardware/PCB/)              | Custom flight-controller PCB design and routing |
 | **ERC / DRC Reports** | [PCB Verification Files](hardware/PCB/)       | Electrical and design rule verification reports |
-
-| File Type       | File Name / Link | Description |
-| --------------- | ---------------- | ----------- |
-| CAD Model       |                  |             |
-| Circuit Diagram |                  |             |
-| PCB Design      |                  |             |
 | Flowchart       |                  |             |
 | Simulation File |                  |             |
 
