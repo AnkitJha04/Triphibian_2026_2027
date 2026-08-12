@@ -201,8 +201,12 @@ That is a much stronger and more realistic technical proposition.
                      └─────────────────────────────┘
 
 ```markdown
-![System Architecture](images/system_architecture.jpeg)
+
 ````
+
+## System Architecture
+
+![RiftWalker System Architecture](images/system_architecture.jpeg)
 
 The RiftWalker system architecture is divided into four main sections:
 
