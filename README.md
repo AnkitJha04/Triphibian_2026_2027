@@ -46,6 +46,8 @@ The current design target has an approximately 2.2 kg maximum take-off mass, wit
 
 The expected outcome is a functional prototype demonstrating controlled movement and transition between three operating domains for applications including search and rescue, environmental surveying, inspection and remote reconnaissance.
 
+Youtube video link :- https://youtu.be/WmMp18_r6lU
+
 ---
 
 ## Objectives
