@@ -302,8 +302,8 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 | **Week 6**   | Simulation & Design Validation                                     | Completed   |
 | **Week 7**   | Flight Controller PCB Design & Schematic Development               | Completed   |
 | **Week 8**   | PCB Routing, ERC/DRC Verification & Hardware Procurement           | Completed   |
-| **Week 9**   | Documentation, Presentation & Hardware Procurement                 | In Progress |
-| **Week 10**  | PCB Fabrication & Assembly                                         | Pending     |
+| **Week 9**   | PCB ic finalization & Component Weight testing                     | Completed   |
+| **Week 10**  | PCB Fabrication & Assembly                                         | In Progress |
 | **Week 11**  | Hardware Integration & Sensor Interfacing                          | Pending     |
 | **Week 12**  | Firmware Development & System Testing                              | Pending     |
 | **Week 13**  | Final Testing, Documentation & Project Demonstration               | Pending     |
