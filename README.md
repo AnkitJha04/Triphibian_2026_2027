@@ -325,6 +325,9 @@ Students must update this section every week.
 | **6** | 27/07–02/08 | Design validation & simulation                 | PCB schematic                 | Mechanical-electronic integration | —             |
 | **7** | 03/08–09/08 | ESP32-S3 schematic & component selection       | PCB routing & verification    | GPIO & power management           | —             |
 | **8** | 10/08–16/08 | PCB routing, ERC/DRC & documentation           | PCB fabrication & procurement | Routing & component placement     | —             |
+| **9** | 17/08–23/08 | Finalized PCB ICs/components and completed PCB design checking and verification.| PCB fabrication & procurement |Component availability and PCB design verification     | —             |
+
+
 
 
 ---
