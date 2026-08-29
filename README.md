@@ -1,4 +1,3 @@
-````markdown
 # BE Capstone Project
 
 ## Project Title
@@ -202,7 +201,7 @@ That is a much stronger and more realistic technical proposition.
                      │  Power Distribution / BEC   │
                      └─────────────────────────────┘
 
-````
+
 
 ## System Architecture
 
