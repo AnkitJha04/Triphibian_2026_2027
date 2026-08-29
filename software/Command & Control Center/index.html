@@ -1,0 +1,2049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RIFTWALKER — Tactical Control Station</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { void: '#02060A', nom: '#10B981', warn: '#F59E0B', threat: '#EF4444', marine: '#3B82F6' },
+          fontFamily: { display: ['Space Grotesk', 'sans-serif'], mono: ['IBM Plex Mono', 'monospace'] }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root { color-scheme: dark; }
+    html, body { height: 100%; overflow: hidden; background: #02060A; }
+    .font-display { font-family: 'Space Grotesk', sans-serif; }
+    .font-mono { font-family: 'IBM Plex Mono', monospace; }
+    .scanlines {
+      pointer-events: none; position: fixed; inset: 0; z-index: 80;
+      background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(16,185,129,.028) 3px, transparent 4px);
+      mix-blend-mode: overlay;
+    }
+    .tactical-grid {
+      background-color: #02060A;
+      background-image:
+        linear-gradient(rgba(16,185,129,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(16,185,129,.05) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .panel { background: rgba(0,0,0,.62); backdrop-filter: blur(12px); border: 1px solid rgba(16,185,129,.22); }
+    .nav-btn.active { background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.55); color: #10B981; }
+    .led { width: 7px; height: 7px; border-radius: 99px; box-shadow: 0 0 8px currentColor; animation: pulse-led 1.6s ease-in-out infinite; }
+    @keyframes pulse-led { 50% { opacity: .35; } }
+    .view { display: none; animation: fadeIn .25s ease; }
+    .view.active { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+    .mode-btn.active-air { border-color: #10B981; color: #10B981; background: rgba(16,185,129,.12); }
+    .mode-btn.active-land { border-color: #F59E0B; color: #F59E0B; background: rgba(245,158,11,.12); }
+    .mode-btn.active-water { border-color: #3B82F6; color: #3B82F6; background: rgba(59,130,246,.12); }
+    .usage-item.active, .hw-card.active { border-color: currentColor; background: rgba(255,255,255,.05); }
+    #codeArea, #cmdLog { tab-size: 2; caret-color: #10B981; }
+    textarea::-webkit-scrollbar, #cmdLog::-webkit-scrollbar { width: 8px; }
+    textarea::-webkit-scrollbar-thumb, #cmdLog::-webkit-scrollbar-thumb { background: #1f2937; }
+    .corner { position: absolute; width: 10px; height: 10px; pointer-events: none; }
+    .corner-tl { top: -1px; left: -1px; border-top: 1px solid #10B981; border-left: 1px solid #10B981; }
+    .corner-tr { top: -1px; right: -1px; border-top: 1px solid #10B981; border-right: 1px solid #10B981; }
+    .corner-bl { bottom: -1px; left: -1px; border-bottom: 1px solid #10B981; border-left: 1px solid #10B981; }
+    .corner-br { bottom: -1px; right: -1px; border-bottom: 1px solid #10B981; border-right: 1px solid #10B981; }
+    input[type=range] { accent-color: #10B981; }
+    .keycap { min-width: 2rem; height: 2rem; border: 1px solid #334155; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+    .keycap.on { border-color: #10B981; color: #10B981; background: rgba(16,185,129,.15); }
+    .hw-card { cursor: pointer; }
+    .view-cam.on { border-color: #10B981; color: #10B981; background: rgba(16,185,129,.12); }
+    .use-cam.on { border-color: #10B981; color: #10B981; background: rgba(16,185,129,.12); }
+    #mapCanvas, #hwCanvas { cursor: grab; }
+    #mapCanvas.drag, #hwCanvas.drag { cursor: grabbing; }
+    .hw-cam.on { border-color: #10B981; color: #10B981; background: rgba(16,185,129,.12); }
+    .hw-inspect h4 { font-size: 10px; letter-spacing: 0.18em; color: #10B981; margin: 14px 0 6px; font-family: 'IBM Plex Mono', monospace; }
+    .hw-inspect p { margin: 0 0 8px; color: #cbd5e1; font-size: 11px; line-height: 1.55; }
+    .hw-inspect table { width: 100%; font-size: 10px; font-family: 'IBM Plex Mono', monospace; }
+    .hw-inspect td { padding: 2px 0; vertical-align: top; }
+    .hw-inspect td:first-child { color: #64748b; width: 38%; padding-right: 8px; }
+    .hw-inspect .pin { color: #6ee7b7; }
+    .hw-part-btn { display: block; width: 100%; text-align: left; padding: 5px 7px; margin: 3px 0; border: 1px solid rgba(255,255,255,.08); font-size: 10px; color: #94a3b8; background: transparent; }
+    .hw-part-btn.on { border-color: #10B981; color: #6ee7b7; background: rgba(16,185,129,.08); }
+  </style>
+</head>
+<body class="tactical-grid text-slate-200 font-display h-screen flex flex-col">
+  <div class="scanlines"></div>
+  <header class="relative z-20 h-12 shrink-0 flex items-center justify-between px-4 border-b border-emerald-500/20 bg-black/70 backdrop-blur-md">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 border border-emerald-400/60 flex items-center justify-center text-nom text-xs font-bold">RW</div>
+      <div>
+        <div class="text-[11px] tracking-[0.3em] text-emerald-400/80 uppercase">Unit RiftWalker // Control Station</div>
+        <div class="text-[10px] font-mono text-slate-500">TRIPHIBIOUS VTOL · ARROWS STEER · SLIDER THROTTLE</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-5 font-mono text-[11px]">
+      <div class="flex items-center gap-2"><span class="led bg-nom text-nom"></span><span class="text-slate-400">UPLINK</span><span id="uplinkStatus" class="text-nom">SECURE</span></div>
+      <div class="flex items-center gap-2"><span class="led bg-nom text-nom"></span><span class="text-slate-400">BATTERY</span><span id="hdrBat" class="text-nom">98%</span></div>
+      <div id="hdrLink" class="text-slate-500">ESP32 TWIN</div>
+      <div class="text-emerald-300/90 tabular-nums" id="clock">00:00:00Z</div>
+    </div>
+  </header>
+
+  <div class="flex flex-1 min-h-0 relative z-10">
+    <aside class="w-52 shrink-0 border-r border-emerald-500/20 bg-black/50 backdrop-blur-md flex flex-col py-3 px-2 gap-0.5">
+      <div class="font-mono text-[10px] tracking-[0.3em] text-slate-500 px-2 mb-2">NAVIGATION</div>
+      <button class="nav-btn active text-left px-3 py-2 border border-transparent text-slate-400 text-sm" data-view="kinematics"><span class="font-mono text-[10px] mr-2">01</span>Kinematics</button>
+      <button class="nav-btn text-left px-3 py-2 border border-transparent text-slate-400 text-sm" data-view="hardware"><span class="font-mono text-[10px] mr-2">02</span>Hardware</button>
+      <button class="nav-btn text-left px-3 py-2 border border-transparent text-slate-400 text-sm" data-view="usages"><span class="font-mono text-[10px] mr-2">03</span>Usages</button>
+      <button class="nav-btn text-left px-3 py-2 border border-transparent text-slate-400 text-sm" data-view="firmware"><span class="font-mono text-[10px] mr-2">04</span>Firmware</button>
+      <button class="nav-btn text-left px-3 py-2 border border-transparent text-slate-400 text-sm" data-view="command"><span class="font-mono text-[10px] mr-2">05</span>Command</button>
+      <div class="mt-auto panel p-3 relative">
+        <span class="corner corner-tl"></span><span class="corner corner-br"></span>
+        <div class="font-mono text-[9px] text-slate-500 tracking-widest">AIRFRAME</div>
+        <div class="text-xs mt-1">Mass 2.2 kg</div>
+        <div class="text-xs text-nom">T/W 2.15 : 1</div>
+        <div class="text-[10px] font-mono text-slate-500 mt-2">Hover 46.6% T<br>I²R + induced power</div>
+      </div>
+    </aside>
+
+    <main class="flex-1 min-w-0 p-3 overflow-hidden">
+      <!-- KINEMATICS -->
+      <section id="view-kinematics" class="view active h-full gap-3">
+        <div class="flex-1 min-w-0 panel relative flex flex-col overflow-hidden">
+          <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+          <span class="corner corner-bl"></span><span class="corner corner-br"></span>
+          <div class="px-3 pt-2 flex justify-between items-start shrink-0 gap-3">
+            <div>
+              <div class="font-mono text-[10px] tracking-[0.28em] text-emerald-400/80">VIEW A · KINEMATICS PILOT</div>
+              <div class="text-lg">THRUST VECTOR · ORBIT CAMERA</div>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              <div class="flex flex-wrap gap-1 justify-end">
+                <button type="button" class="view-cam px-2 py-1 border border-white/15 font-mono text-[10px] tracking-widest text-slate-400" data-cam="top">TOP</button>
+                <button type="button" class="view-cam px-2 py-1 border border-emerald-500/50 font-mono text-[10px] tracking-widest text-nom" data-cam="iso">ISO</button>
+                <button type="button" class="view-cam px-2 py-1 border border-white/15 font-mono text-[10px] tracking-widest text-slate-400" data-cam="side">SIDE</button>
+                <button type="button" class="view-cam px-2 py-1 border border-white/15 font-mono text-[10px] tracking-widest text-slate-400" data-cam="front">FRONT</button>
+                <button type="button" class="view-cam px-2 py-1 border border-white/15 font-mono text-[10px] tracking-widest text-slate-400" data-cam="rear">REAR</button>
+                <button type="button" id="btnOrbit" class="px-2 py-1 border border-white/15 font-mono text-[10px] tracking-widest text-slate-400">AUTO</button>
+              </div>
+              <div class="font-mono text-[10px] text-slate-400 text-right" id="servoReadout">SERVO θ = 0.0°</div>
+            </div>
+          </div>
+          <div class="flex-1 min-h-0 relative">
+            <canvas id="kinCanvas" class="absolute inset-0 w-full h-full block"></canvas>
+          </div>
+          <div class="shrink-0 border-t border-emerald-500/15 p-3 flex flex-wrap items-center gap-3">
+            <div class="flex gap-2">
+              <button class="mode-btn active-air px-3 py-1.5 border text-[10px] tracking-widest font-mono" data-mode="air">VTOL AIR</button>
+              <button class="mode-btn px-3 py-1.5 border border-white/15 text-[10px] tracking-widest font-mono text-slate-400" data-mode="land">SURFACE LAND</button>
+              <button class="mode-btn px-3 py-1.5 border border-white/15 text-[10px] tracking-widest font-mono text-slate-400" data-mode="water">MARINE WATER</button>
+            </div>
+            <div class="flex items-center gap-2 flex-1 min-w-[180px]">
+              <span class="font-mono text-[10px] text-slate-500">THR</span>
+              <input id="thrSlider" type="range" min="0" max="100" value="47" class="flex-1" />
+              <span id="thrLabel" class="font-mono text-xs text-nom w-10">47%</span>
+            </div>
+            <div class="grid grid-cols-3 gap-1">
+              <span></span><button type="button" class="keycap" data-k="ArrowUp">↑</button><span></span>
+              <button type="button" class="keycap" data-k="ArrowLeft">←</button>
+              <button type="button" class="keycap" data-k="ArrowDown">↓</button>
+              <button type="button" class="keycap" data-k="ArrowRight">→</button>
+            </div>
+          </div>
+        </div>
+        <div class="w-72 shrink-0 flex flex-col gap-2 overflow-auto">
+          <div class="panel p-3 relative flex-1">
+            <span class="corner corner-tl"></span>
+            <div class="font-mono text-[10px] tracking-widest text-slate-500 mb-2">LIVE TELEMETRY</div>
+            <div class="space-y-2 font-mono text-sm">
+              <div><div class="text-[10px] text-slate-500">DOMAIN</div><div id="telDomain" class="text-nom text-lg">AIR · VTOL</div></div>
+              <div><div class="text-[10px] text-slate-500">GROUNDSPEED</div><div id="telSpeed" class="text-xl">0.0 <span class="text-xs text-slate-500">KM/H</span></div></div>
+              <div><div class="text-[10px] text-slate-500">HEADING</div><div id="telHdg" class="text-lg">000°</div></div>
+              <div><div class="text-[10px] text-slate-500">STATUS</div><div id="telStatus" class="text-emerald-300 text-xs leading-snug">Hover band 46.6% T</div></div>
+              <div><div class="text-[10px] text-slate-500">BUS CURRENT</div><div id="telCurrent" class="text-xl">0.0 <span class="text-xs text-slate-500">A</span></div>
+              <div class="text-[10px] text-slate-500" id="telICeil">ceil 50.0 A · 4×12.5 A A2212</div></div>
+              <div><div class="text-[10px] text-slate-500">MOTOR MIX · FL FR / RL RR</div>
+                <div class="grid grid-cols-2 gap-1 mt-1 text-[10px]" id="mixHud"></div>
+              </div>
+              <div><div class="text-[10px] text-slate-500">THRUST / WEIGHT</div><div id="telTW" class="text-nom">1.00</div></div>
+              <div><div class="text-[10px] text-slate-500">POWER · PACK</div><div id="telPwr" class="text-xs text-slate-300">—</div></div>
+              <div><div class="text-[10px] text-slate-500">AGL / ISA</div><div id="telAlt" class="text-xs text-slate-300">—</div></div>
+              <div class="h-14"><canvas id="ampCanvas" class="w-full h-full"></canvas></div>
+            </div>
+          </div>
+          <div class="panel p-3 relative">
+            <span class="corner corner-tl"></span>
+            <div class="font-mono text-[10px] tracking-widest text-slate-500 mb-2">FIXED DATA</div>
+            <div class="font-mono text-[11px] space-y-1">
+              <div class="flex justify-between"><span class="text-slate-500">PEAK T (4×1.18)</span><span>4.72 kgf</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">MASS</span><span>2.2 kg</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">T/W MAX</span><span class="text-nom">2.15 : 1</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">HOVER</span><span>46.61% · 31.2 A</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">DISK 4×10″</span><span>0.203 m²</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">PACK 3S 5 Ah</span><span>55.5 Wh</span></div>
+              <div class="flex justify-between"><span class="text-slate-500">XPS 4.84 L</span><span>2.20 geo / 1.93 pack</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HARDWARE -->
+      <section id="view-hardware" class="view h-full gap-3">
+        <div class="flex-1 min-w-0 panel relative flex flex-col overflow-hidden">
+          <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+          <div class="px-3 pt-2 shrink-0 flex justify-between items-start gap-3">
+            <div>
+              <div class="font-mono text-[10px] tracking-[0.28em] text-emerald-400/80">VIEW B · HARDWARE · 3D</div>
+              <div class="text-lg" id="hwTitle">AIRFRAME · TRIPHIBIOUS DOMAIN</div>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              <div class="flex flex-wrap gap-1 justify-end">
+                <button type="button" class="hw-cam px-2 py-1 border border-white/15 font-mono text-[10px] tracking-widest text-slate-400" data-hcam="top">TOP</button>
+                <button type="button" class="hw-cam on px-2 py-1 border border-emerald-500/50 font-mono text-[10px] tracking-widest text-nom" data-hcam="iso">ISO</button>
+                <button type="button" class="hw-cam px-2 py-1 border border-white/15 font-mono text-[10px] tracking-widest text-slate-400" data-hcam="side">SIDE</button>
+                <button type="button" class="hw-cam px-2 py-1 border border-white/15 font-mono text-[10px] tracking-widest text-slate-400" data-hcam="front">FRONT</button>
+                <button type="button" id="btnHwOrbit" class="px-2 py-1 border border-white/15 font-mono text-[10px] tracking-widest text-slate-400">AUTO</button>
+              </div>
+              <div class="font-mono text-[10px] text-slate-500">Drag orbit · click a part · wheel zoom</div>
+            </div>
+          </div>
+          <div class="flex-1 min-h-0 relative">
+            <canvas id="hwCanvas" class="absolute inset-0 w-full h-full block"></canvas>
+          </div>
+        </div>
+        <div class="w-[22rem] shrink-0 flex flex-col gap-1.5 min-h-0">
+          <div class="font-mono text-[10px] tracking-widest text-slate-500 px-1">SUBSYSTEMS</div>
+          <div class="flex flex-col gap-1 overflow-auto pr-1 shrink-0 max-h-[42%]">
+            <button class="hw-card panel p-2.5 text-left text-nom active" data-hw="airframe"><div class="text-sm">Airframe / domains</div><p class="text-[10px] text-slate-400">VTOL air · XPS land · planing water — one 2.2 kg cell.</p></button>
+            <button class="hw-card panel p-2.5 text-left text-nom" data-hw="avionics"><div class="text-sm">Core avionics</div><p class="text-[10px] text-slate-400">ESP32-S3-WROOM-1 · dual-core FreeRTOS · I2C / PWM map.</p></button>
+            <button class="hw-card panel p-2.5 text-left text-warn" data-hw="power"><div class="text-sm">Power isolation</div><p class="text-[10px] text-slate-400">AP2112K 3.3 V ≠ Matek muscle bus · 470 µF servo rail.</p></button>
+            <button class="hw-card panel p-2.5 text-left text-threat" data-hw="actuation"><div class="text-sm">Actuation</div><p class="text-[10px] text-slate-400">4× A2212 1400KV · 4× DS3218 vector 0°/90°.</p></button>
+            <button class="hw-card panel p-2.5 text-left text-marine" data-hw="sensors"><div class="text-sm">Sensors</div><p class="text-[10px] text-slate-400">MPU-6050 · MS5607 · HC-SR04 domain law.</p></button>
+            <button class="hw-card panel p-2.5 text-left text-nom" data-hw="mobility"><div class="text-sm">Mobility — XPS wheels</div><p class="text-[10px] text-slate-400">190 mm foam · 4.84 L · packed buoyancy 1.93:1.</p></button>
+          </div>
+          <div class="panel p-2 shrink-0">
+            <label class="font-mono text-[10px] text-slate-500">Muscle bus <span id="busVLab">11.1</span> V</label>
+            <input id="busV" type="range" min="7" max="12.6" step="0.1" value="11.1" class="w-full" />
+            <label class="font-mono text-[10px] text-slate-500">Manual vector <span id="hwVecLab">0</span>°</label>
+            <input id="hwVec" type="range" min="0" max="90" value="0" class="w-full" />
+            <div class="text-[10px] text-slate-500 mt-1">Live electrical: <span id="hwPredI" class="text-nom">—</span></div>
+          </div>
+          <div class="panel p-3 relative flex-1 min-h-0 overflow-auto">
+            <span class="corner corner-tl"></span>
+            <div class="font-mono text-[10px] tracking-widest text-slate-500">INSPECTOR</div>
+            <div id="hwInspect" class="hw-inspect mt-1"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- USAGES -->
+      <section id="view-usages" class="view h-full gap-3">
+        <div class="flex-1 min-w-0 panel relative flex flex-col overflow-hidden">
+          <span class="corner corner-tl"></span><span class="corner corner-tr"></span>
+          <div class="px-3 pt-2 shrink-0 flex justify-between items-start gap-3">
+            <div>
+              <div class="font-mono text-[10px] tracking-[0.28em] text-emerald-400/80">VIEW C · USAGES · 3D</div>
+              <div class="text-lg" id="usageTitle">DEFENCE PERIMETER</div>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              <div class="flex flex-wrap gap-1 justify-end">
+                <button type="button" class="use-cam px-2 py-1 border border-white/15 font-mono text-[10px] tracking-widest text-slate-400" data-ucam="top">TOP</button>
+                <button type="button" class="use-cam on px-2 py-1 border border-emerald-500/50 font-mono text-[10px] tracking-widest text-nom" data-ucam="iso">ISO</button>
+                <button type="button" class="use-cam px-2 py-1 border border-white/15 font-mono text-[10px] tracking-widest text-slate-400" data-ucam="side">SIDE</button>
+                <button type="button" class="use-cam px-2 py-1 border border-white/15 font-mono text-[10px] tracking-widest text-slate-400" data-ucam="front">FRONT</button>
+                <button type="button" id="btnUseOrbit" class="px-2 py-1 border border-white/15 font-mono text-[10px] tracking-widest text-slate-400">AUTO</button>
+              </div>
+              <div class="font-mono text-[10px] text-slate-500">Drag orbit · arrows fly the unit · click sets waypoint</div>
+            </div>
+          </div>
+          <div class="flex-1 min-h-0 relative">
+            <canvas id="mapCanvas" class="absolute inset-0 w-full h-full block"></canvas>
+          </div>
+        </div>
+        <div class="w-80 shrink-0 flex flex-col gap-1.5 overflow-auto pr-1">
+          <div class="font-mono text-[10px] tracking-widest text-slate-500 px-1">OPERATIONAL USE CASES</div>
+          <button class="usage-item panel p-2.5 text-left text-threat active" data-u="0"><div class="text-sm">Defence perimeter</div><p class="text-[10px] text-slate-400">Standoff patrol of a base fence; silent water taxi + VTOL pop-up.</p></button>
+          <button class="usage-item panel p-2.5 text-left text-nom" data-u="1"><div class="text-sm">Tactical recon</div><p class="text-[10px] text-slate-400">Covert coastal ISR; flight to hull-down water taxying.</p></button>
+          <button class="usage-item panel p-2.5 text-left text-warn" data-u="2"><div class="text-sm">Disaster SAR</div><p class="text-[10px] text-slate-400">Collapsed bridges; land on floodwater; lawnmower search.</p></button>
+          <button class="usage-item panel p-2.5 text-left text-threat" data-u="3"><div class="text-sm">Border intercept</div><p class="text-[10px] text-slate-400">78 km/h ground sprint, differential thrust chase.</p></button>
+          <button class="usage-item panel p-2.5 text-left text-marine" data-u="4"><div class="text-sm">Ecological logging</div><p class="text-[10px] text-slate-400">WQ sampling; aero-prop avoids plant tangling.</p></button>
+          <button class="usage-item panel p-2.5 text-left text-marine" data-u="5"><div class="text-sm">Maritime / port security</div><p class="text-[10px] text-slate-400">Hull inspection from water, then hop to quay.</p></button>
+          <button class="usage-item panel p-2.5 text-left text-warn" data-u="6"><div class="text-sm">Wildfire spotting</div><p class="text-[10px] text-slate-400">Thermal-grid over canopy; land on access roads.</p></button>
+          <button class="usage-item panel p-2.5 text-left text-nom" data-u="7"><div class="text-sm">Humanitarian resupply</div><p class="text-[10px] text-slate-400">VTOL drop to isolated hamlets; roll last-mile.</p></button>
+          <button class="usage-item panel p-2.5 text-left text-slate-300" data-u="8"><div class="text-sm">Infrastructure inspect</div><p class="text-[10px] text-slate-400">Bridge soffit + river pile survey, one airframe.</p></button>
+          <button class="usage-item panel p-2.5 text-left text-warn" data-u="9"><div class="text-sm">Hazmat standoff sense</div><p class="text-[10px] text-slate-400">Keep operators back; IMU/baro/ToF only — no payload weapons.</p></button>
+        </div>
+      </section>
+
+      <!-- FIRMWARE -->
+      <section id="view-firmware" class="view h-full flex-col gap-2">
+        <div class="flex items-center justify-between gap-2 shrink-0">
+          <div>
+            <div class="font-mono text-[10px] tracking-[0.28em] text-emerald-400/80">VIEW D · FIRMWARE LAB</div>
+            <div class="text-lg">EDIT · SIMULATE · FLASH IMAGE</div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="btnCompile" class="px-3 py-1.5 border border-emerald-500/40 text-nom font-mono text-[11px]">COMPILE</button>
+            <button id="btnSim" class="px-3 py-1.5 border border-marine/50 text-marine font-mono text-[11px]">SIMULATE TICK</button>
+            <button id="btnSimRun" class="px-3 py-1.5 border border-marine/50 text-marine font-mono text-[11px]">RUN 2s</button>
+            <button id="btnFlash" class="px-3 py-1.5 border border-amber-500/40 text-warn font-mono text-[11px]">FLASH ESP32-S3</button>
+            <button id="btnParse" class="px-3 py-1.5 border border-white/20 text-slate-300 font-mono text-[11px]">PARSE @CMD</button>
+          </div>
+        </div>
+        <div class="flex flex-1 min-h-0 gap-2">
+          <div class="flex-1 min-w-0 panel overflow-hidden flex flex-col">
+            <div class="h-8 flex items-center px-3 gap-2 border-b border-white/10 bg-black/40 font-mono text-[11px] text-slate-400">
+              <span class="w-2.5 h-2.5 rounded-full bg-threat"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-warn"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-nom"></span>
+              <span class="ml-2">riftwalker/main/app_main.cpp</span>
+              <span class="ml-auto text-slate-600">edit freely — Command page tracks @CMD / server.on</span>
+            </div>
+            <div class="flex flex-1 min-h-0">
+              <pre id="lineNums" class="w-12 shrink-0 bg-black/50 text-right pr-2 py-2 font-mono text-[11px] leading-5 text-slate-600 select-none overflow-hidden"></pre>
+              <textarea id="codeArea" spellcheck="false" class="flex-1 bg-[#0b0f14] text-[#d4d4d4] font-mono text-[11px] leading-5 p-2 outline-none resize-none border-0"></textarea>
+            </div>
+          </div>
+          <div class="w-80 shrink-0 flex flex-col gap-2">
+            <div class="panel p-3">
+              <div class="font-mono text-[10px] text-slate-500 mb-2">SENSOR LAW → TWIN</div>
+              <label class="flex items-center gap-2 text-[11px] mb-2"><input type="checkbox" id="liveFw" /> Live firmware (SensorTask 100 Hz)</label>
+              <label class="text-[10px] font-mono text-slate-500">MS5607 pressure <span id="pLab">980</span> hPa · ISA <span id="isaLab">281</span> m</label>
+              <input id="simP" type="range" min="850" max="1050" value="980" class="w-full" />
+              <label class="text-[10px] font-mono text-slate-500">ToF / HC-SR04 <span id="dLab">250</span> mm</label>
+              <input id="simD" type="range" min="20" max="400" value="250" class="w-full" />
+              <div id="simResult" class="mt-2 font-mono text-[11px] text-nom">idle</div>
+            </div>
+            <div class="panel relative flex-1 min-h-[180px] overflow-hidden">
+              <div class="absolute top-2 left-2 z-10 font-mono text-[9px] text-slate-500">FIRMWARE BEHAVIOUR</div>
+              <canvas id="fwCanvas" class="absolute inset-0 w-full h-full"></canvas>
+            </div>
+            <div class="panel p-3 h-28 overflow-auto font-mono text-[10px]" id="serialOut">
+              <span class="text-slate-500">serial idle — compile, simulate, or flash</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COMMAND -->
+      <section id="view-command" class="view h-full gap-3">
+        <div class="w-64 shrink-0 flex flex-col gap-2 overflow-auto">
+          <div class="panel p-3 relative">
+            <span class="corner corner-tl"></span>
+            <div class="font-mono text-[10px] tracking-widest text-slate-500">LINK</div>
+            <div class="flex gap-2 mt-2 mb-2">
+              <button id="btnTwin" class="flex-1 border border-emerald-500/40 text-nom font-mono text-[11px] py-2">TWIN SIM</button>
+              <button id="btnPing" class="flex-1 border border-white/20 text-slate-300 font-mono text-[11px] py-2">ESP32</button>
+            </div>
+            <input id="espIp" value="192.168.4.1" class="w-full bg-black/50 border border-white/10 px-2 py-1 font-mono text-xs mb-1" placeholder="192.168.4.1" />
+            <input id="espPort" value="80" class="w-full bg-black/50 border border-white/10 px-2 py-1 font-mono text-xs mb-2" />
+            <div id="linkState" class="font-mono text-[10px] text-slate-500">Twin: commands move the drone on the right.</div>
+          </div>
+          <div class="panel p-3">
+            <div class="font-mono text-[10px] tracking-widest text-slate-500 mb-2">FLY</div>
+            <div class="grid grid-cols-3 gap-1.5 mb-3">
+              <span></span>
+              <button type="button" class="keycap h-10" data-k="ArrowUp">FWD</button>
+              <span></span>
+              <button type="button" class="keycap h-10" data-k="ArrowLeft">LEFT</button>
+              <button type="button" class="keycap h-10" data-k="ArrowDown">AFT</button>
+              <button type="button" class="keycap h-10" data-k="ArrowRight">RIGHT</button>
+            </div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="font-mono text-[10px] text-slate-500">THR</span>
+              <input id="cmdThr" type="range" min="0" max="100" value="47" class="flex-1" />
+              <span id="cmdThrLab" class="font-mono text-xs w-10">47%</span>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5 mb-2">
+              <button type="button" id="cmdAir" class="border border-emerald-500/40 text-nom font-mono text-[10px] py-2">AIR</button>
+              <button type="button" id="cmdLand" class="border border-amber-500/40 text-warn font-mono text-[10px] py-2">LAND</button>
+              <button type="button" id="cmdWater" class="border border-blue-500/40 text-marine font-mono text-[10px] py-2">WATER</button>
+            </div>
+            <button id="btnEstop" class="w-full border border-threat text-threat font-mono text-[11px] py-2">EMERGENCY STOP</button>
+          </div>
+          <div class="panel p-2 flex-1 min-h-0 overflow-auto">
+            <div class="font-mono text-[9px] tracking-widest text-slate-500 mb-1">FIRMWARE ROUTES</div>
+            <div id="cmdPalette" class="flex flex-col gap-1"></div>
+          </div>
+        </div>
+        <div class="flex-1 min-w-0 flex flex-col gap-2">
+          <div class="flex-1 min-h-0 panel relative overflow-hidden">
+            <span class="corner corner-tl"></span>
+            <div class="absolute top-2 left-3 z-10 font-mono text-[10px] text-slate-400">COMMAND TWIN · same physics as Kinematics + SensorTask</div>
+            <canvas id="cmdCanvas" class="absolute inset-0 w-full h-full block"></canvas>
+          </div>
+          <div class="h-24 panel p-2 overflow-auto font-mono text-[10px] leading-4" id="cmdLog"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+const PHYS = {
+  MASS: 2.2,
+  TMAX: 4.72,
+  G: 9.80665,
+  HOVER: 2.2 / 4.72,
+  RHO: 1.225,
+  PROP_D: 0.254,
+  N_PROP: 4,
+  ETA: 0.70,
+  V_NOM: 11.1,
+  PACK_AH: 5.0,
+  PACK_WH: 11.1 * 5.0,
+  I_IDLE: 2.2,
+  I_HOVER: 31.2,
+  I_LAND: 5.4,
+  I_WATER: 14.9,
+  I_CEIL_AIR: 50,
+  I_MOTOR_CEIL: 12.5,
+  SERVO_DPS: 120,
+  YAW_DPS: 90,
+  VMAX_KMH: { air: 58, land: 78, water: 10 },
+  CRR: 0.10,
+  CDA: { air: 0.10, land: 0.15, water: 0.035 },
+  WHEEL_R: 0.095,
+  VOL_L: 4.84,
+  BUOY_GEO: 4.84 / 2.2,
+  BUOY_PACK: 1.93,
+  MAP_PER_M: 5.5
+};
+PHYS.DISK_A = PHYS.N_PROP * Math.PI * Math.pow(PHYS.PROP_D / 2, 2);
+
+function isaAltM(hPa) {
+  return 44330.769 * (1 - Math.pow((hPa * 100) / 101325, 0.190266));
+}
+function wrap180(deg) { return ((deg + 540) % 360) - 180; }
+function currentFromThrustKgf(Tkgf) {
+  const n = Math.max(0, Tkgf) / PHYS.MASS;
+  return PHYS.I_IDLE + (PHYS.I_HOVER - PHYS.I_IDLE) * Math.pow(n, 1.5);
+}
+
+const DEFAULT_FW = `// RiftWalker Dual-Core RTOS Architecture
+// Core 0: Environmental Fusion & State Machine
+// Core 1: HTTP C2 + PWM (A2212 ESC + DS3218 vector)
+// Hover throttle = mass/Tmax = 2.2/4.72 = 0.4661 (46.6%)
+//
+// @CMD id=VECTOR method=POST path=/api/vector args=deg label=Vector servos (0-90)
+// @CMD id=THROTTLE method=POST path=/api/throttle args=pct label=Throttle percent
+// @CMD id=YAW method=POST path=/api/yaw args=deg label=Yaw command
+// @CMD id=TRANSLATE method=POST path=/api/translate args=fx,fy label=Body-axis stick
+// @CMD id=DOMAIN method=POST path=/api/domain args=mode label=Domain air|land|water
+// @CMD id=ESTOP method=POST path=/api/estop args= label=Emergency stop
+// @CMD id=TELEM method=GET path=/api/telemetry args= label=Poll telemetry
+
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ESP32Servo.h>
+
+WebServer server(80);
+portMUX_TYPE mutex = portMUX_INITIALIZER_UNLOCKED;
+enum { DOMAIN_AIR = 0, DOMAIN_SURFACE = 1, DOMAIN_WATER = 2 };
+volatile int activeDomain = DOMAIN_AIR;
+volatile float cmdThrottle = 0.466f;
+volatile float cmdYaw = 0;
+volatile float cmdFx = 0, cmdFy = 0;
+Servo vector[4];
+const int VEC_PINS[4] = {17, 18, 8, 9};
+const int ESC_PINS[4] = {4, 7, 15, 16};
+
+void vectorServos(int deg) {
+  deg = constrain(deg, 0, 90);
+  for (int i = 0; i < 4; i++) vector[i].write(deg);
+}
+
+void SensorTask(void *pvParameters) {
+  while(1) {
+    float pressure = Baro.readPressure();
+    float distance = ToF.readDistance();
+    
+    // Hardware Mutex Lock to prevent Core 1 collision
+    portENTER_CRITICAL(&mutex);
+    if (pressure < 1000 && distance > 100) {
+      activeDomain = DOMAIN_AIR;
+      vectorServos(0); // VTOL Lift
+    } else {
+      activeDomain = DOMAIN_SURFACE;
+      vectorServos(90); // Aero-Drive
+    }
+    portEXIT_CRITICAL(&mutex);
+    
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+  }
+}
+
+void cors() {
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.sendHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  server.sendHeader("Access-Control-Allow-Headers", "Content-Type");
+}
+
+void handleVector() {
+  cors();
+  int deg = server.arg("deg").toInt();
+  portENTER_CRITICAL(&mutex);
+  vectorServos(deg);
+  portEXIT_CRITICAL(&mutex);
+  server.send(200, "application/json", "{\\"ok\\":true,\\"deg\\":" + String(deg) + "}");
+}
+void handleThrottle() {
+  cors();
+  cmdThrottle = constrain(server.arg("pct").toFloat() / 100.0f, 0, 1);
+  server.send(200, "application/json", "{\\"ok\\":true,\\"pct\\":" + String(cmdThrottle) + "}");
+}
+void handleYaw() {
+  cors();
+  cmdYaw = server.arg("deg").toFloat();
+  server.send(200, "application/json", "{\\"ok\\":true}");
+}
+void handleTranslate() {
+  cors();
+  cmdFx = server.arg("fx").toFloat();
+  cmdFy = server.arg("fy").toFloat();
+  server.send(200, "application/json", "{\\"ok\\":true}");
+}
+void handleDomain() {
+  cors();
+  String m = server.arg("mode");
+  portENTER_CRITICAL(&mutex);
+  if (m == "air") { activeDomain = DOMAIN_AIR; vectorServos(0); }
+  else if (m == "water") { activeDomain = DOMAIN_WATER; vectorServos(90); }
+  else { activeDomain = DOMAIN_SURFACE; vectorServos(90); }
+  portEXIT_CRITICAL(&mutex);
+  server.send(200, "application/json", "{\\"ok\\":true}");
+}
+void handleEstop() {
+  cors();
+  cmdThrottle = 0; cmdFx = 0; cmdFy = 0; cmdYaw = 0;
+  server.send(200, "application/json", "{\\"ok\\":true,\\"estop\\":true}");
+}
+void handleTelem() {
+  cors();
+  server.send(200, "application/json", "{\\"domain\\":" + String(activeDomain) +
+    ",\\"thr\\":" + String(cmdThrottle) + "}");
+}
+
+void CommandTask(void *pvParameters) {
+  WiFi.softAP("RiftWalker", "walkthe rift");
+  server.on("/api/vector", HTTP_POST, handleVector);
+  server.on("/api/throttle", HTTP_POST, handleThrottle);
+  server.on("/api/yaw", HTTP_POST, handleYaw);
+  server.on("/api/translate", HTTP_POST, handleTranslate);
+  server.on("/api/domain", HTTP_POST, handleDomain);
+  server.on("/api/estop", HTTP_POST, handleEstop);
+  server.on("/api/telemetry", HTTP_GET, handleTelem);
+  server.on("/api/vector", HTTP_OPTIONS, [](){ cors(); server.send(204); });
+  server.begin();
+  for (;;) { server.handleClient(); vTaskDelay(1); }
+}
+
+void setup() {
+  for (int i = 0; i < 4; i++) { vector[i].attach(VEC_PINS[i]); }
+  xTaskCreatePinnedToCore(SensorTask, "sense", 4096, NULL, 2, NULL, 0);
+  xTaskCreatePinnedToCore(CommandTask, "c2", 8192, NULL, 1, NULL, 1);
+}
+void loop() { vTaskDelay(1000); }
+`;
+
+const MODE = {
+  air:   { domain: 'AIR · VTOL', target: 0, color: '#10B981', rpm: 48 },
+  land:  { domain: 'LAND · SURFACE', target: 90, color: '#F59E0B', rpm: 22 },
+  water: { domain: 'MARINE · PLANING', target: 90, color: '#3B82F6', rpm: 26 }
+};
+
+const HW = {
+  airframe: {
+    title: 'AIRFRAME · TRIPHIBIOUS DOMAIN', color: '#10B981',
+    cam: { yaw: 42, pitch: 40, zoom: 0.68 },
+    html: `
+<p>RiftWalker is a single 2.2 kg cell that changes <b>thrust vector</b>, not propulsion type. Four A2212 disks do lift in air and aero-drive on land/water. XPS paddle wheels are unpowered rollers/floats. Domain is a state machine, not a gearbox.</p>
+<h4>THREE DOMAINS</h4>
+<button type="button" class="hw-part-btn" data-part="dom_air">AIR · VTOL — servo 0°, disk-normal to sky</button>
+<button type="button" class="hw-part-btn" data-part="dom_land">LAND · SURFACE — servo 90°, XPS roll, Crr ≈ 0.10</button>
+<button type="button" class="hw-part-btn" data-part="dom_water">WATER · PLANING — servo 90°, packed buoyancy 1.93:1</button>
+<table>
+<tr><td>Mass</td><td>2.2 kg AUW</td></tr>
+<tr><td>Peak static T</td><td>4 × 1.18 kgf = 4.72 kgf (10×4.5″ A2212 burst)</td></tr>
+<tr><td>T/W max</td><td>4.72 / 2.2 = 2.145 ≈ 2.15 : 1</td></tr>
+<tr><td>Hover collective</td><td>2.2 / 4.72 = 46.61% · I_hover = 31.2 A @ 11.1 V ≈ 346 W</td></tr>
+<tr><td>Disk area</td><td>4 × π (0.127 m)² = 0.203 m² · FM ≈ 0.57 vs momentum theory</td></tr>
+<tr><td>Vmax (design)</td><td>58 / 78 / 10 km/h air / land / water</td></tr>
+</table>
+<h4>SENSORTask LAW (CORE 0, 100 Hz)</h4>
+<p>If MS5607 pressure &lt; 1000 hPa <i>and</i> HC-SR04 &gt; 100 mm → <span class="pin">DOMAIN_AIR</span>, vectorServos(0). Else surface, vectorServos(90). Water vs land is a C2 override on Core 1; the baro/ToF law only splits air from surface.</p>
+<p>1000 hPa is ISA ≈ 111 m above MSL — a coarse “not sitting in hydrostatic/ground clutter” gate, not a precision altimeter trip.</p>`
+  },
+  avionics: {
+    title: 'CORE AVIONICS · ESP32-S3', color: '#10B981',
+    cam: { yaw: 8, pitch: 62, zoom: 1.15 },
+    html: `
+<p>Flight computer is an <b>ESP32-S3-WROOM-1</b> (Xtensa LX7 dual-core, Wi-Fi 4 + BLE 5, in-module PCB antenna). FreeRTOS pins SensorTask to Core 0 and HTTP C2 + LEDC PWM to Core 1. A mutex stops PWM writes colliding with the 100 Hz domain law.</p>
+<button type="button" class="hw-part-btn" data-part="u1">U1 ESP32-S3-WROOM-1</button>
+<button type="button" class="hw-part-btn" data-part="usb">J1 USB-C · EN SW1 · BOOT IO0</button>
+<button type="button" class="hw-part-btn" data-part="i2c">I2C bus SDA IO23 / SCL IO24</button>
+<button type="button" class="hw-part-btn" data-part="ant">RF keep-out (on-module antenna)</button>
+<h4>PIN MAP</h4>
+<table>
+<tr><td>I2C SDA / SCL</td><td class="pin">IO23 / IO24</td></tr>
+<tr><td>ESC PWM (LEDC)</td><td class="pin">IO4, IO7, IO15, IO16</td></tr>
+<tr><td>DS3218 PWM</td><td class="pin">IO17, IO18, IO8, IO9</td></tr>
+<tr><td>HC-SR04 TRIG / ECHO</td><td class="pin">IO2 / IO14</td></tr>
+<tr><td>BAT_ADC</td><td class="pin">IO1</td></tr>
+<tr><td>EN / BOOT</td><td>SW1 / IO0 (download)</td></tr>
+</table>
+<h4>U1 — ESP32-S3-WROOM-1</h4>
+<p>Typical WROOM-1: 8 MB flash, 3.3 V I/O only. Clock 240 MHz. SoftAP SSID <span class="pin">RiftWalker</span> on Core 1. Do not hang SensorTask on Wi-Fi; 10 ms vTaskDelay keeps fusion at 100 Hz.</p>
+<h4>J1 USB-C</h4>
+<p>Programming / serial. Native USB on S3 (not a CP210x dongle). EN pulls CHIP_PU; BOOT straps IO0 for ROM download.</p>
+<h4>I2C</h4>
+<p>Shared bus for MPU-6050 (0x68) and MS5607 (0x76/0x77). 4.7 kΩ pull-ups to 3.3 V. Keep stubs short; IMU wants ≥ 400 kHz if the baro allows it, else 100 kHz is safe.</p>
+<h4>ANTENNA KEEP-OUT</h4>
+<p>Ground pour and metal chassis must stay out of the WROOM keep-out. Plastic/XPS body is RF-transparent; carbon or foil near the module kills AP range.</p>`
+  },
+  power: {
+    title: 'POWER ISOLATION · DUAL BUS', color: '#F59E0B',
+    cam: { yaw: 55, pitch: 28, zoom: 1.05 },
+    html: `
+<p>Logic and muscle never share a regulator. A 3.3 V LDO feeds the S3 and sensors. A Matek-class PDB feeds ESCs (7–11 V design, 3S 11.1 V nominal). Servo 5 V is a third island with a 470 µF polymer to eat DS3218 back-EMF.</p>
+<button type="button" class="hw-part-btn" data-part="pack">3S pack 5 Ah · 55.5 Wh</button>
+<button type="button" class="hw-part-btn" data-part="pdb">Matek PDB 7–11 V muscle</button>
+<button type="button" class="hw-part-btn" data-part="ldo">U2 AP2112K 3.3 V 600 mA</button>
+<button type="button" class="hw-part-btn" data-part="cap">C10 470 µF on +5 V_SERVO</button>
+<button type="button" class="hw-part-btn" data-part="div">BAT_ADC IO1 · 100 k / 22 k</button>
+<h4>PACK</h4>
+<p>3S LiPo, 5 Ah → 11.1 × 5 = 55.5 Wh. Hover 346 W ⇒ endurance ≈ 55.5/346 × 60 ≈ 9.6 min (no reserve). Empty-ish 3S ≈ 9.9 V; PDB floor 7 V is a brown-out, not a flight plan.</p>
+<h4>U2 AP2112K</h4>
+<p>600 mA, 3.3 V, dropout ~0.4 V so 5 V USB or a 5 V BEC both work. This rail is <i>not</i> the motor bus. Ground-star at the PDB, not at the USB shell.</p>
+<h4>MATEK PDB</h4>
+<p>Rated 7–11 V into 4× ESC. Air-bus ceiling 50 A continuous (4 × 12.5 A A2212). Current in the twin scales as P/V when you drag the muscle-bus slider (constant electrical power).</p>
+<h4>C10 470 µF</h4>
+<p>Tantalum/polymer on +5 V_SERVO. DS3218 stalls dump inductive energy; without C10 the 3.3 V LDO browns out and the S3 resets mid-vector.</p>
+<h4>BAT_ADC DIVIDER</h4>
+<p>100 k / 22 k on IO1: Vadc = Vbat × 22/122. At 12.6 V → 2.27 V (inside 0–3.3 V). Scale in firmware: Vbat = adc × 3.3/4095 × 122/22.</p>
+<h4>D1 SCHOTTKY</h4>
+<p>From VBUS so USB 5 V cannot back-feed the pack, and pack cannot fight the USB host.</p>`
+  },
+  actuation: {
+    title: 'ACTUATION · A2212 + DS3218', color: '#EF4444',
+    cam: { yaw: 38, pitch: 36, zoom: 0.62 },
+    html: `
+<p>Four outrunner disks, four vector servos. Mix: pods 0 RL, 1 RR, 2 FL, 3 FR (body +Y forward). Collective is throttle; stick loads rear vs front and left vs right. Servo 0° = lift (n̂ sky); 90° = aero-drive (n̂ aft).</p>
+<button type="button" class="hw-part-btn" data-part="mot">4× A2212 1400KV · 10×4.5″</button>
+<button type="button" class="hw-part-btn" data-part="esc">ESC PWM IO4,7,15,16</button>
+<button type="button" class="hw-part-btn" data-part="servo">4× DS3218 21 kg·cm</button>
+<button type="button" class="hw-part-btn" data-part="hinge">Vector hinge · SF 1.42</button>
+<h4>A2212 1400KV</h4>
+<p>No-load ≈ 1400 × 11.1 = 15 540 rpm. With 10×4.5″, datasheet burst ≈ 1.18 kgf at well above 12.5 A. Continuous is 12.5 A/motor (50 A bus). Peak 4.72 kgf is static burst, not a 9-minute hover.</p>
+<p>Momentum hover: T = 21.58 N, A = 0.203 m², P_ideal = T<sup>3/2</sup>/√(2ρA) ≈ 142 W. Shaft/electric at 31.2 A × 11.1 V ≈ 346 W ⇒ FM ≈ 0.57 — cheap two-blade disks, expected.</p>
+<h4>ESC</h4>
+<p>LEDC PWM on IO4, IO7, IO15, IO16. Arming protocol is firmware-side; ESTOP zeros cmdThrottle. Do not share this timer with servo LEDC without a separate channel group.</p>
+<h4>DS3218</h4>
+<p>21 kg·cm stall, metal gears, 5 V. Unloaded ~0.15–0.20 s/60° (~300–400 °/s). Under 4-prop hinge moment we slew at <b>120 °/s</b> in the twin. Hinge aero load 14.8 kg·cm → SF = 21/14.8 = 1.42.</p>
+<h4>VECTOR GEOMETRY</h4>
+<p>0°: thrust along +Z (lift). 90°: thrust along −Y (aft). The kinematics twin interpolates disk normal n = (0, k, 1−k) with k = θ/90. Same slider on this page locks θ and unchecks live SensorTask so you can preview without the baro law fighting you.</p>`
+  },
+  sensors: {
+    title: 'SENSORS · IMU / BARO / ToF', color: '#3B82F6',
+    cam: { yaw: 18, pitch: 24, zoom: 1.1 },
+    html: `
+<p>Fusion is deliberately thin: gyro/accel for attitude, baro for the air/surface gate, ultrasonics for AGL clutter. No lidar, no camera payload, no weapons. Inject P and distance on Firmware SIM — that is the same law Core 0 runs.</p>
+<button type="button" class="hw-part-btn" data-part="imu">U3 MPU-6050 (upgrade ICM-20948)</button>
+<button type="button" class="hw-part-btn" data-part="baro">U4 MS5607 barometer</button>
+<button type="button" class="hw-part-btn" data-part="tof">U5 HC-SR04 · TRIG IO2 ECHO IO14</button>
+<button type="button" class="hw-part-btn" data-part="div5">R9/R10 5 V → 3.3 V echo divider</button>
+<h4>MPU-6050</h4>
+<p>Invensense 6-axis, I2C 0x68, ±2/4/8/16 g, ±250–2000 °/s. Good enough for VTOL inner loop; mag-less, so yaw drifts — we command yaw from stick, not heading hold. Upgrade path: ICM-20948 (9-axis) on the same I2C addresses with a driver change.</p>
+<h4>MS5607</h4>
+<p>24-bit pressure, ~10 cm class at still air. ISA: h = 44330.769 × (1 − (P/101325)<sup>0.190266</sup>) with P in Pa. Firmware trip is P &lt; 1000 hPa (not a climb command). Weather + true altitude both move this number; treat it as a domain bit, then use ToF to reject “flying” while sitting on a deck.</p>
+<h4>HC-SR04</h4>
+<p>5 V module. Range ~20–4000 mm, 40 kHz, ~15° cone. TRIG IO2 (3.3 V is accepted as HIGH). ECHO is 5 V — <b>R9/R10 divider</b> to IO14 or the S3 GPIO dies. Law: distance &gt; 100 mm means “not chassis-height / not in contact”. On water the echo is noisy; that is why surface is the else-branch, not a third predicate.</p>`
+  },
+  mobility: {
+    title: 'MOBILITY · XPS PADDLE WHEELS', color: '#10B981',
+    cam: { yaw: 78, pitch: 16, zoom: 0.95 },
+    html: `
+<p>Wheels are closed-cell XPS foam: they comply on dirt and displace water. They are not motorised. Land speed comes from vectored props after 90°; rotation ω = v / r with r = 95 mm. On water the same aero-drive plus hull planing; props stay above weed.</p>
+<button type="button" class="hw-part-btn" data-part="wheel">190 mm XPS wheel · 4 places</button>
+<button type="button" class="hw-part-btn" data-part="vol">Displacement 4.84 L geo / 4.24 L packed</button>
+<button type="button" class="hw-part-btn" data-part="paddle">Paddle scoops · aero-drive 90°</button>
+<h4>GEOMETRY</h4>
+<table>
+<tr><td>Diameter</td><td>190 mm · r = 0.095 m</td></tr>
+<tr><td>Circumference</td><td>0.597 m · 78 km/h ⇒ n ≈ 2180 rpm if it were driven (it is not)</td></tr>
+<tr><td>Geo volume</td><td>4 × π r² w ≈ 4.84 L with w ≈ 43 mm face</td></tr>
+<tr><td>Geo buoyancy</td><td>4.84 kgf / 2.2 kg = 2.20 : 1</td></tr>
+<tr><td>Packed (hubs)</td><td>4.24 L → 1.93 : 1 (design brief)</td></tr>
+</table>
+<h4>LAND</h4>
+<p>Rolling resistance Crr ≈ 0.10 on foam/dirt. Terminal: T_h = Crr mg + ½ ρ CdA v². At peak 46 N this solves near 78 km/h with CdA ≈ 0.15 m². Taxi current 5.4 A is a slow-roll design point (~60 W), not that sprint.</p>
+<h4>WATER</h4>
+<p>Reserve buoyancy 1.93:1 keeps the 10″ disks clear if the hull sits on the packed waterline. Wave-making is lumped into a quadratic that terminals at 10 km/h with the 14.9 A water load (spray + paddle scoop + aero-drive).</p>
+<h4>WHY AERO-DRIVE</h4>
+<p>Spinning XPS in weeds wraps. Vectoring the A2212 to 90° pushes air aft while wheels freewheel. Same motors as VTOL — no water jet, no extra drivetrain mass.</p>`
+  }
+};
+
+const USAGES = [
+  { title: 'DEFENCE PERIMETER', color: '#EF4444', kind: 'defence', domain: 'air', sky0: '#05070c', sky1: '#1a0a0a', ground: '#12180f' },
+  { title: 'TACTICAL RECON', color: '#10B981', kind: 'radar', domain: 'air', sky0: '#071018', sky1: '#1a3350', ground: '#0c1a14' },
+  { title: 'DISASTER SAR', color: '#F59E0B', kind: 'grid', domain: 'water', sky0: '#0c1014', sky1: '#3d4a55', ground: '#0a2230' },
+  { title: 'BORDER INTERCEPT', color: '#EF4444', kind: 'chase', domain: 'land', sky0: '#1a140c', sky1: '#4a3820', ground: '#2a2418' },
+  { title: 'ECOLOGICAL LOGGING', color: '#3B82F6', kind: 'sonar', domain: 'water', sky0: '#041018', sky1: '#0d3d4a', ground: '#062a32' },
+  { title: 'MARITIME / PORT', color: '#3B82F6', kind: 'port', domain: 'water', sky0: '#0a1218', sky1: '#243848', ground: '#0a2030' },
+  { title: 'WILDFIRE SPOTTING', color: '#F59E0B', kind: 'fire', domain: 'air', sky0: '#1a0804', sky1: '#6b2a08', ground: '#1a1208' },
+  { title: 'HUMANITARIAN RESUPPLY', color: '#10B981', kind: 'aid', domain: 'air', sky0: '#12100c', sky1: '#3a4a58', ground: '#1a2418' },
+  { title: 'INFRASTRUCTURE', color: '#94a3b8', kind: 'bridge', domain: 'air', sky0: '#0e1418', sky1: '#4a5a68', ground: '#1c2428' },
+  { title: 'HAZMAT STANDOFF', color: '#F59E0B', kind: 'haz', domain: 'air', sky0: '#12180a', sky1: '#3a4a12', ground: '#1a220c' }
+];
+
+const keys = new Set();
+const sim = {
+  mode: 'air', servo: 0, prop: 0, wheel: 0, t: 0,
+  heading: 0, wx: 0, wy: 0, speedKmh: 0, vms: 0, current: 8, tw: 1,
+  vz: 0, altM: 1.2, wh: PHYS.PACK_WH, powerW: 0,
+  particles: [], wakes: [], ampHist: new Array(90).fill(8),
+  throttle: 0.47, estop: false, hwLockServo: false, iCeil: 50,
+  motors: [
+    { id: 'RL', mix: 1, spin: 0, I: 0 },
+    { id: 'RR', mix: 1, spin: 0, I: 0 },
+    { id: 'FL', mix: 1, spin: 0, I: 0 },
+    { id: 'FR', mix: 1, spin: 0, I: 0 }
+  ]
+};
+let linkMode = 'twin';
+let usageId = 0, usageT = 0, wp = null;
+const asset3 = { x: 0, y: 0, hdg: 0 };
+const useCam = { yaw: 42, pitch: 38, ty: 42, tp: 38, zoom: 0.72, auto: false, drag: false, lx: 0, ly: 0 };
+const hwCam = { yaw: 42, pitch: 40, ty: 42, tp: 40, zoom: 0.68, auto: false, drag: false, lx: 0, ly: 0 };
+let hwFocus = 'airframe', hwPart = '', hwLabels = [];
+let hwMoved = 0;
+let flashedFW = localStorage.getItem('rw_flashed') || '';
+
+function typing() {
+  const el = document.activeElement;
+  return el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT');
+}
+
+function tickClock() {
+  const d = new Date(), z = n => String(n).padStart(2, '0');
+  document.getElementById('clock').textContent = z(d.getUTCHours()) + ':' + z(d.getUTCMinutes()) + ':' + z(d.getUTCSeconds()) + 'Z';
+}
+tickClock(); setInterval(tickClock, 1000);
+
+const views = {
+  kinematics: document.getElementById('view-kinematics'),
+  hardware: document.getElementById('view-hardware'),
+  usages: document.getElementById('view-usages'),
+  firmware: document.getElementById('view-firmware'),
+  command: document.getElementById('view-command')
+};
+
+function showView(name) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  Object.entries(views).forEach(([k, v]) => v.classList.toggle('active', k === name));
+  if (name === 'kinematics') resizeKin();
+  if (name === 'usages') { resizeMap(); }
+  if (name === 'hardware') { resizeHw(); setHwFocus(hwFocus, true); }
+  if (name === 'firmware') resizeTwin(document.getElementById('fwCanvas'));
+  if (name === 'command') { rebuildPalette(); resizeTwin(document.getElementById('cmdCanvas')); }
+}
+document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => showView(btn.dataset.view)));
+
+window.addEventListener('keydown', e => {
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+    if (!typing()) { e.preventDefault(); keys.add(e.key); syncKeycaps(); }
+  }
+  if (!typing() && (e.key === 'q' || e.key === 'Q' || e.key === 'e' || e.key === 'E')) {
+    keys.add(e.key);
+  }
+});
+window.addEventListener('keyup', e => { keys.delete(e.key); syncKeycaps(); });
+document.querySelectorAll('.keycap').forEach(b => {
+  b.addEventListener('mousedown', () => keys.add(b.dataset.k));
+  b.addEventListener('mouseup', () => keys.delete(b.dataset.k));
+  b.addEventListener('mouseleave', () => keys.delete(b.dataset.k));
+});
+function syncKeycaps() {
+  document.querySelectorAll('.keycap').forEach(b => b.classList.toggle('on', keys.has(b.dataset.k)));
+}
+
+function setMode(mode) {
+  sim.mode = mode; sim.particles = []; sim.wakes = [];
+  const m = MODE[mode];
+  document.getElementById('telDomain').textContent = m.domain;
+  document.getElementById('telDomain').style.color = m.color;
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.classList.remove('active-air','active-land','active-water');
+    if (b.dataset.mode === mode) b.classList.add('active-' + mode);
+  });
+}
+document.querySelectorAll('.mode-btn').forEach(b => b.addEventListener('click', () => {
+  sim.hwLockServo = false;
+  const lf = document.getElementById('liveFw');
+  if (lf) lf.checked = false;
+  setMode(b.dataset.mode);
+}));
+
+const thrSlider = document.getElementById('thrSlider');
+const cmdThr = document.getElementById('cmdThr');
+function setThrottle(pct, from) {
+  pct = Math.max(0, Math.min(100, pct));
+  sim.throttle = pct / 100;
+  if (from !== 'kin') thrSlider.value = pct;
+  if (from !== 'cmd') cmdThr.value = pct;
+  document.getElementById('thrLabel').textContent = Math.round(pct) + '%';
+  document.getElementById('cmdThrLab').textContent = Math.round(pct) + '%';
+}
+thrSlider.addEventListener('input', () => setThrottle(+thrSlider.value, 'kin'));
+cmdThr.addEventListener('input', () => {
+  setThrottle(+cmdThr.value, 'cmd');
+  sendRoute({ id: 'THROTTLE', method: 'POST', path: '/api/throttle', args: 'pct' }, { pct: cmdThr.value });
+});
+
+const kinCanvas = document.getElementById('kinCanvas');
+const kctx = kinCanvas.getContext('2d');
+const ampCanvas = document.getElementById('ampCanvas');
+const actx = ampCanvas.getContext('2d');
+
+function resizeKin() {
+  const r = kinCanvas.parentElement.getBoundingClientRect();
+  kinCanvas.width = Math.max(1, r.width) * devicePixelRatio;
+  kinCanvas.height = Math.max(1, r.height) * devicePixelRatio;
+  kctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  const ar = ampCanvas.parentElement.getBoundingClientRect();
+  ampCanvas.width = Math.max(1, ar.width) * devicePixelRatio;
+  ampCanvas.height = Math.max(1, ar.height) * devicePixelRatio;
+  actx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+}
+
+const CAM_PRESETS = {
+  top: { yaw: 0, pitch: 88 },
+  iso: { yaw: 42, pitch: 46 },
+  side: { yaw: 90, pitch: 14 },
+  front: { yaw: 0, pitch: 16 },
+  rear: { yaw: 180, pitch: 16 }
+};
+const cam = { yaw: 42, pitch: 46, ty: 42, tp: 46, zoom: 1, auto: false, drag: false, lx: 0, ly: 0, preset: 'iso' };
+
+function setCamPreset(name) {
+  const p = CAM_PRESETS[name];
+  if (!p) return;
+  cam.preset = name; cam.ty = p.yaw; cam.tp = p.pitch; cam.auto = false;
+  document.getElementById('btnOrbit').classList.remove('on');
+  document.querySelectorAll('.view-cam').forEach(b => b.classList.toggle('on', b.dataset.cam === name));
+}
+document.querySelectorAll('.view-cam').forEach(b => b.addEventListener('click', () => setCamPreset(b.dataset.cam)));
+document.querySelector('.view-cam[data-cam="iso"]').classList.add('on');
+document.getElementById('btnOrbit').addEventListener('click', () => {
+  cam.auto = !cam.auto;
+  document.getElementById('btnOrbit').classList.toggle('on', cam.auto);
+  if (cam.auto) document.querySelectorAll('.view-cam').forEach(b => b.classList.remove('on'));
+});
+
+kinCanvas.addEventListener('pointerdown', e => {
+  cam.drag = true; cam.lx = e.clientX; cam.ly = e.clientY; cam.auto = false;
+  document.getElementById('btnOrbit').classList.remove('on');
+  kinCanvas.classList.add('drag');
+  kinCanvas.setPointerCapture(e.pointerId);
+});
+kinCanvas.addEventListener('pointerup', () => { cam.drag = false; kinCanvas.classList.remove('drag'); });
+kinCanvas.addEventListener('pointermove', e => {
+  if (!cam.drag) return;
+  cam.ty = (cam.ty + (e.clientX - cam.lx) * 0.45 + 360) % 360;
+  cam.tp = Math.max(6, Math.min(89, cam.tp - (e.clientY - cam.ly) * 0.35));
+  cam.lx = e.clientX; cam.ly = e.clientY;
+  cam.preset = 'free';
+  document.querySelectorAll('.view-cam').forEach(b => b.classList.remove('on'));
+});
+kinCanvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  cam.zoom = Math.max(0.55, Math.min(2.2, cam.zoom * (e.deltaY > 0 ? 0.92 : 1.08)));
+}, { passive: false });
+
+let projOffset = { x: 0, y: 0, z: 0 };
+let projCam = null;
+let projHdg = null;
+let emitThrust = true;
+
+function proj(x, y, z, S, w, h) {
+  x += projOffset.x; y += projOffset.y; z += projOffset.z;
+  const C = projCam || cam;
+  const hd = ((projHdg != null ? projHdg : sim.heading) * Math.PI / 180);
+  let bx = x * Math.cos(hd) - y * Math.sin(hd);
+  let by = x * Math.sin(hd) + y * Math.cos(hd);
+  const yaw = C.yaw * Math.PI / 180;
+  const pit = C.pitch * Math.PI / 180;
+  const cx = bx * Math.cos(yaw) + by * Math.sin(yaw);
+  const cy = -bx * Math.sin(yaw) + by * Math.cos(yaw);
+  const cy2 = cy * Math.cos(pit) + z * Math.sin(pit);
+  const cz2 = -cy * Math.sin(pit) + z * Math.cos(pit);
+  const k = S * C.zoom;
+  return { x: w / 2 + cx * k, y: h / 2 - cz2 * k, d: cy2 };
+}
+
+function unprojGround(sx, sy, S, w, h, C) {
+  const k = S * C.zoom;
+  const yaw = C.yaw * Math.PI / 180;
+  const pit = C.pitch * Math.PI / 180;
+  const sp = Math.sin(pit);
+  if (Math.abs(sp) < 0.04) return { x: 0, y: 0 };
+  const cx = (sx - w / 2) / k;
+  const cz2 = (h / 2 - sy) / k;
+  const cy = -cz2 / sp;
+  const c = Math.cos(yaw), s = Math.sin(yaw);
+  return { x: cx * c - cy * s, y: cx * s + cy * c };
+}
+
+function spawnThrust3(mx, my, mz, mode, thr) {
+  if (thr < 0.05) return;
+  const n = mode === 'air' ? 2 : 3;
+  for (let i = 0; i < n; i++) {
+    let vx, vy, vz, col;
+    if (mode === 'air') {
+      vx = (Math.random() - 0.5) * 1.2; vy = (Math.random() - 0.5) * 1.2; vz = - (1.4 + Math.random()) * thr * 2.2;
+      col = 'rgba(16,185,129,';
+    } else {
+      vx = (Math.random() - 0.5) * 0.8; vy = - (2.2 + Math.random() * 2) * thr; vz = (Math.random() - 0.5) * 0.5;
+      col = mode === 'water' ? 'rgba(59,130,246,' : 'rgba(245,158,11,';
+    }
+    if (sim.particles.length > 220) sim.particles.shift();
+    sim.particles.push({ x: mx, y: my, z: mz, vx, vy, vz, life: 1, col, mode });
+  }
+}
+
+function drawPoly(ctx, pts, fill, stroke, lw) {
+  if (pts.length < 2) return;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 1.2; ctx.stroke(); }
+}
+
+function diskPts(cx, cy, cz, nx, ny, nz, r, n, S, w, h) {
+  let ux = 0, uy = -nz, uz = ny;
+  if (Math.hypot(ux, uy, uz) < 1e-4) { ux = -nz; uy = 0; uz = nx; }
+  const ul = Math.hypot(ux, uy, uz) || 1; ux /= ul; uy /= ul; uz /= ul;
+  let vx = ny * uz - nz * uy, vy = nz * ux - nx * uz, vz = nx * uy - ny * ux;
+  const vl = Math.hypot(vx, vy, vz) || 1; vx /= vl; vy /= vl; vz /= vl;
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    pts.push(proj(cx + r * (ux * Math.cos(a) + vx * Math.sin(a)),
+      cy + r * (uy * Math.cos(a) + vy * Math.sin(a)),
+      cz + r * (uz * Math.cos(a) + vz * Math.sin(a)), S, w, h));
+  }
+  return pts;
+}
+
+function drawDrone3(ctx, w, h, S) {
+  const thr = sim.estop ? 0 : sim.throttle;
+  const k = sim.servo / 90;
+  const bob = sim.mode === 'air' ? Math.sin(sim.t * 3) * 3 : 0;
+  const prim = [];
+  const box = (x0, y0, z0, x1, y1, z1, fill, stroke) => {
+    const c = [
+      [x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0],
+      [x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]
+    ].map(p => proj(p[0], p[1], p[2] + bob, S, w, h));
+    const faces = [
+      [0,1,2,3],[4,5,6,7],[0,1,5,4],[3,2,6,7],[0,3,7,4],[1,2,6,5]
+    ];
+    faces.forEach((f, fi) => {
+      const pts = f.map(i => c[i]);
+      const d = pts.reduce((s, p) => s + p.d, 0) / 4;
+      prim.push({ d, draw: () => drawPoly(ctx, pts, fi === 1 ? fill : fill, stroke, 1) });
+    });
+  };
+  box(-46, -30, 14, 46, 30, 32, '#1e293b', '#10B981');
+  box(-18, -18, 32, 18, 18, 34, '#b91c1c', '#ef4444');
+
+  const marine = sim.mode === 'water';
+  [[-34,-24],[34,-24],[-34,24],[34,24]].forEach(wh => {
+    const nx = Math.sign(wh[0]) || 1;
+    const pts = diskPts(wh[0], wh[1], 12 + bob, nx, 0, 0, 20, 18, S, w, h);
+    const d = pts.reduce((s, p) => s + p.d, 0) / pts.length;
+    prim.push({ d, draw: () => {
+      drawPoly(ctx, pts, marine ? '#0b1a2e' : '#0f172a', marine ? '#60a5fa' : '#94a3b8', 1.5);
+      ctx.strokeStyle = marine ? 'rgba(96,165,250,.6)' : '#475569';
+      const hub = proj(wh[0], wh[1], 12 + bob, S, w, h);
+      for (let i = 0; i < 10; i++) {
+        const a = sim.wheel + i * Math.PI / 5;
+        const q = proj(wh[0], wh[1] + Math.cos(a) * 16, 12 + bob + Math.sin(a) * 16, S, w, h);
+        ctx.beginPath(); ctx.moveTo(hub.x, hub.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+      }
+    }});
+  });
+
+  const pods = [
+    { x: -108, y: -82, ox: -1, oy: -1 }, { x: 108, y: -82, ox: 1, oy: -1 },
+    { x: -108, y:  82, ox: -1, oy:  1 }, { x: 108, y:  82, ox: 1, oy:  1 }
+  ];
+  pods.forEach((p, i) => {
+    const zArm = 22 + bob;
+    const zPod = 40 + bob;
+    const path = [
+      proj(p.ox * 38, p.oy * 26, zArm, S, w, h),
+      proj(p.ox * 62, p.oy * 44, zArm, S, w, h),
+      proj(p.ox * 78, p.oy * 60, zPod, S, w, h),
+      proj(p.x, p.y, zPod, S, w, h)
+    ];
+    const d = path[3].d;
+    prim.push({ d: d - 8, draw: () => {
+      ctx.strokeStyle = '#64748b'; ctx.lineWidth = 8; ctx.lineJoin = 'miter'; ctx.lineCap = 'square';
+      ctx.beginPath(); ctx.moveTo(path[0].x, path[0].y);
+      path.slice(1).forEach(q => ctx.lineTo(q.x, q.y)); ctx.stroke();
+      ctx.strokeStyle = 'rgba(226,232,240,.35)'; ctx.lineWidth = 4; ctx.stroke();
+    }});
+    const nx = k * 0, ny = k, nz = 1 - k;
+    const nl = Math.hypot(nx, ny, nz) || 1;
+    const N = { x: nx / nl, y: ny / nl, z: nz / nl };
+    const mix = sim.motors[i].mix;
+    const spin = sim.motors[i].spin * ((i === 0 || i === 3) ? 1 : -1);
+    const R = 36 + 16 * mix;
+    prim.push({ d: d + 12, draw: () => {
+      const ring = diskPts(p.x, p.y, zPod, N.x, N.y, N.z, R, 28, S, w, h);
+      const hot = mix > 1.12;
+      drawPoly(ctx, ring, hot ? 'rgba(245,158,11,' + (0.35 + 0.4 * thr) + ')' : 'rgba(236,253,245,' + (0.25 + 0.45 * thr * mix) + ')', hot ? '#F59E0B' : '#ffffff', 2);
+      let ux = 0, uy = -N.z, uz = N.y;
+      if (Math.hypot(ux, uy, uz) < 1e-4) { ux = -N.z; uy = 0; uz = N.x; }
+      const ul = Math.hypot(ux, uy, uz); ux /= ul; uy /= ul; uz /= ul;
+      let vx = N.y * uz - N.z * uy, vy = N.z * ux - N.x * uz, vz = N.x * uy - N.y * ux;
+      const vl = Math.hypot(vx, vy, vz); vx /= vl; vy /= vl; vz /= vl;
+      ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 4 + 3 * mix;
+      for (let b = 0; b < 2; b++) {
+        const a = spin + b * Math.PI;
+        const c = Math.cos(a), s = Math.sin(a);
+        const B = proj(p.x + R * (ux * c + vx * s), p.y + R * (uy * c + vy * s), zPod + R * (uz * c + vz * s), S, w, h);
+        const A = proj(p.x, p.y, zPod, S, w, h);
+        ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+        ctx.fillStyle = '#F59E0B';
+        ctx.beginPath(); ctx.arc(B.x, B.y, 3 + mix, 0, Math.PI * 2); ctx.fill();
+      }
+      const hub = proj(p.x, p.y, zPod, S, w, h);
+      ctx.fillStyle = '#e2e8f0'; ctx.beginPath(); ctx.arc(hub.x, hub.y, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ca8a04'; ctx.beginPath(); ctx.arc(hub.x, hub.y, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = hot ? '#F59E0B' : '#6ee7b7';
+      ctx.font = '11px IBM Plex Mono';
+      ctx.fillText(sim.motors[i].id + ' ' + Math.round(mix * 100) + '%', hub.x + 10, hub.y - 8);
+    }});
+    if (emitThrust && Math.random() < 0.35 + 0.4 * mix) spawnThrust3(p.x, p.y, zPod, sim.mode, thr * mix);
+  });
+
+  prim.sort((a, b) => a.d - b.d);
+  prim.forEach(p => p.draw());
+
+  const gizmo = [
+    { ax: 70, ay: 0, az: 0, c: '#ef4444', l: 'X' },
+    { ax: 0, ay: 70, az: 0, c: '#22c55e', l: 'Y+' },
+    { ax: 0, ay: 0, az: 70, c: '#3b82f6', l: 'Z' }
+  ];
+  const o = proj(0, 0, 32 + bob, S, w, h);
+  gizmo.forEach(g => {
+    const q = proj(g.ax, g.ay, g.az + 32 + bob, S, w, h);
+    ctx.strokeStyle = g.c; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(o.x, o.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+    ctx.fillStyle = g.c; ctx.font = '10px IBM Plex Mono'; ctx.fillText(g.l, q.x + 4, q.y);
+  });
+}
+
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+function applyFirmwareLaw() {
+  const box = document.getElementById('liveFw');
+  if (box && !box.checked) return;
+  if (sim.hwLockServo) return;
+  const ta = document.getElementById('codeArea');
+  if (!ta) return;
+  const src = ta.value;
+  const pEl = document.getElementById('simP');
+  const dEl = document.getElementById('simD');
+  if (!pEl) return;
+  const P = +pEl.value, D = +dEl.value;
+  const pLt = /pressure\s*<\s*([\d.]+)/.exec(src);
+  const dGt = /distance\s*>\s*([\d.]+)/.exec(src);
+  const thrP = pLt ? +pLt[1] : 1000;
+  const thrD = dGt ? +dGt[1] : 100;
+  const air = P < thrP && D > thrD;
+  if (air && sim.mode !== 'air') setMode('air');
+  else if (!air && sim.mode === 'air') setMode('land');
+  const res = document.getElementById('simResult');
+  if (res) res.textContent = (air ? 'AIR · vectorServos(0)' : 'SURFACE · vectorServos(90)') +
+    '  [' + P + ' hPa, ' + D + ' mm, ISA ' + isaAltM(P).toFixed(0) + ' m]';
+}
+
+function missionPoint(kind, t) {
+  if (kind === 'grid' || kind === 'fire' || kind === 'aid') {
+    const row = Math.floor((t * 0.22) % 4);
+    const col = (t * 0.45) % 4;
+    const cc = row % 2 === 0 ? col : 4 - col;
+    return { x: (cc - 2) * 50, y: (row - 1.5) * 45 };
+  }
+  if (kind === 'chase') return { x: Math.sin(t * 0.55) * 80, y: -40 + ((t * 28) % 160) - 80 };
+  if (kind === 'defence' || kind === 'radar') return { x: Math.cos(t * 0.32) * 90, y: Math.sin(t * 0.32) * 70 };
+  if (kind === 'sonar' || kind === 'port' || kind === 'haz') return { x: Math.sin(t * 0.28) * 60, y: Math.cos(t * 0.18) * 40 };
+  if (kind === 'bridge') return { x: Math.sin(t * 0.35) * 30, y: -20 + Math.sin(t * 0.22) * 50 };
+  return { x: 0, y: 0 };
+}
+
+function usagesStick() {
+  if (!views.usages.classList.contains('active')) return { fx: 0, yaw: 0 };
+  const tgt = wp || missionPoint(USAGES[usageId].kind, usageT);
+  const dx = tgt.x - asset3.x, dy = tgt.y - asset3.y;
+  const dist = Math.hypot(dx, dy);
+  const des = Math.atan2(dx, dy) * 180 / Math.PI;
+  const err = wrap180(des - sim.heading);
+  return { fx: dist > 10 ? 0.85 : dist > 3 ? 0.25 : 0, yaw: clamp(err / 25, -1, 1) };
+}
+
+function integrate(dt) {
+  const m = MODE[sim.mode];
+  const target = sim.hwLockServo ? +document.getElementById('hwVec').value : m.target;
+  const errS = target - sim.servo;
+  sim.servo += Math.sign(errS) * Math.min(Math.abs(errS), PHYS.SERVO_DPS * dt);
+  const thr = sim.estop ? 0 : sim.throttle;
+  const auto = usagesStick();
+  const keyFx = (keys.has('ArrowUp') ? 1 : 0) + (keys.has('ArrowDown') ? -1 : 0);
+  const keyYaw = (keys.has('ArrowRight') ? 1 : 0) + (keys.has('ArrowLeft') ? -1 : 0);
+  const fx = keyFx !== 0 ? keyFx : auto.fx;
+  const yaw = keyYaw !== 0 ? keyYaw : auto.yaw;
+  const m0 = sim.motors;
+  if (sim.estop) {
+    m0.forEach(mot => { mot.mix = 0; mot.I = 0.05; });
+  } else {
+    m0[0].mix = clamp(1 + 0.5 * fx + 0.42 * yaw, 0.18, 1.85);
+    m0[1].mix = clamp(1 + 0.5 * fx - 0.42 * yaw, 0.18, 1.85);
+    m0[2].mix = clamp(1 - 0.5 * fx + 0.42 * yaw, 0.18, 1.85);
+    m0[3].mix = clamp(1 - 0.5 * fx - 0.42 * yaw, 0.18, 1.85);
+  }
+  const mixMean = m0.reduce((s, mot) => s + mot.mix, 0) / 4 || 1;
+  const yawAuth = 0.25 + 0.75 * thr;
+  sim.heading += yaw * PHYS.YAW_DPS * dt * yawAuth;
+
+  const theta = sim.servo * Math.PI / 180;
+  const alpha = 0.28 * clamp(fx, -1, 1);
+  let Tkgf = thr * PHYS.TMAX * mixMean;
+  let Iraw = currentFromThrustKgf(Tkgf);
+  const bus = Math.max(7, +document.getElementById('busV').value);
+  Iraw *= PHYS.V_NOM / bus;
+  const ceil = sim.mode === 'air' ? PHYS.I_CEIL_AIR : (sim.mode === 'land' ? 4 * PHYS.I_MOTOR_CEIL : 4 * PHYS.I_MOTOR_CEIL);
+  let I = Iraw;
+  m0.forEach(mot => {
+    mot.I = Math.min(PHYS.I_MOTOR_CEIL, Iraw / 4 * (mot.mix / mixMean));
+  });
+  I = m0.reduce((s, mot) => s + mot.I, 0);
+  I = Math.min(I, ceil);
+  if (Iraw > 1e-6 && I < Iraw) Tkgf *= I / Iraw;
+
+  const Tup = Tkgf * Math.cos(theta) * Math.cos(alpha);
+  const Tfwd = Tkgf * Math.sin(theta) + Tkgf * Math.cos(theta) * Math.sin(alpha);
+  sim.tw = sim.mode === 'air' ? Tup / PHYS.MASS : Math.abs(Tfwd) / PHYS.MASS;
+
+  let D = 0, aFwd = 0;
+  const v = sim.vms;
+  if (sim.mode === 'air') {
+    D = 0.5 * PHYS.RHO * PHYS.CDA.air * v * v;
+    aFwd = (Tfwd * PHYS.G - D * Math.sign(v || fx)) / PHYS.MASS;
+    const aUp = (Tup - PHYS.MASS) / PHYS.MASS * PHYS.G;
+    sim.vz += aUp * dt;
+    sim.vz *= Math.exp(-2.4 * dt);
+    sim.altM = clamp(sim.altM + sim.vz * dt, 0, 400);
+    if (sim.altM <= 0 && sim.vz < 0) sim.vz = 0;
+  } else if (sim.mode === 'land') {
+    D = PHYS.CRR * PHYS.MASS * PHYS.G + 0.5 * PHYS.RHO * PHYS.CDA.land * v * v;
+    aFwd = (Tfwd * PHYS.G * Math.sign(fx || 1) - D * Math.sign(v || 1)) / PHYS.MASS;
+    if (!fx && Math.abs(v) < 0.15) { sim.vms = 0; aFwd = 0; }
+    sim.altM = PHYS.WHEEL_R;
+    sim.vz = 0;
+    I = Math.min(4 * PHYS.I_MOTOR_CEIL, 0.9 + (PHYS.I_LAND - 0.9) * (thr * thr) * mixMean + 0.35 * Math.abs(v) + 0.08 * Math.abs(Tfwd) * 8);
+    m0.forEach(mot => { mot.I = I / 4 * mot.mix / mixMean; });
+  } else {
+    const vmaxW = PHYS.VMAX_KMH.water / 3.6;
+    const Tdes = PHYS.I_WATER * bus * PHYS.ETA / Math.max(0.8, vmaxW);
+    const kW = Tdes / (vmaxW * vmaxW);
+    D = 6 + kW * v * v;
+    aFwd = (Tfwd * PHYS.G * 0.55 - D * Math.sign(v || 1)) / PHYS.MASS;
+    if (!fx && Math.abs(v) < 0.08) { sim.vms = 0; aFwd = 0; }
+    sim.altM = 0.04;
+    sim.vz = 0;
+    I = Math.min(4 * PHYS.I_MOTOR_CEIL, 1.3 + (PHYS.I_WATER - 1.3) * (thr * thr) * mixMean + 0.5 * Math.abs(v));
+    m0.forEach(mot => { mot.I = I / 4 * mot.mix / mixMean; });
+  }
+
+  if (sim.estop) { I = 0.35; Tkgf = 0; aFwd = -Math.sign(v) * 4; m0.forEach(mot => { mot.I = 0.08; mot.mix = 0; }); }
+
+  sim.vms += aFwd * dt;
+  const vmax = PHYS.VMAX_KMH[sim.mode] / 3.6;
+  sim.vms = clamp(sim.vms, -vmax * 0.35, vmax);
+  if (!fx && sim.mode === 'air') sim.vms += (0 - sim.vms) * Math.min(1, dt * 1.8);
+  sim.speedKmh = Math.abs(sim.vms) * 3.6;
+
+  const rad = sim.heading * Math.PI / 180;
+  const dx = Math.sin(rad) * sim.vms * dt;
+  const dy = Math.cos(rad) * sim.vms * dt;
+  sim.wx += dx;
+  sim.wy += dy;
+  asset3.x = clamp(asset3.x + dx * PHYS.MAP_PER_M, -180, 180);
+  asset3.y = clamp(asset3.y + dy * PHYS.MAP_PER_M, -180, 180);
+  asset3.hdg = sim.heading;
+
+  sim.prop += m.rpm * dt * (0.15 + 0.85 * thr);
+  m0.forEach(mot => { mot.spin += m.rpm * dt * (0.12 + 0.88 * thr * mot.mix); });
+  if (sim.mode !== 'air') {
+    const omega = sim.vms / PHYS.WHEEL_R;
+    sim.wheel += omega * dt;
+  }
+  sim.t += dt;
+  if (views.usages.classList.contains('active')) usageT += dt;
+
+  applyFirmwareLaw();
+
+  sim.iCeil = sim.mode === 'air' ? PHYS.I_CEIL_AIR : (sim.mode === 'land' ? PHYS.I_LAND : PHYS.I_WATER);
+  sim.current += (I - sim.current) * Math.min(1, dt * 6);
+  sim.powerW = bus * sim.current;
+  sim.wh = Math.max(0, sim.wh - sim.powerW * dt / 3600);
+  sim.ampHist.push(sim.current + (Math.random() - 0.5) * 0.15);
+  if (sim.ampHist.length > 90) sim.ampHist.shift();
+
+  let status;
+  if (sim.estop) status = 'ESTOP — motors zeroed';
+  else if (sim.mode === 'air') {
+    if (Tup < PHYS.MASS - 0.08) status = 'Descent ' + sim.vz.toFixed(1) + ' m/s · induced P∝T^1.5';
+    else if (Tup > PHYS.MASS + 0.08) status = 'Climb ' + sim.vz.toFixed(1) + ' m/s · FM≈0.57 disks';
+    else status = 'Hover 46.61% T · T=W · 31.2 A cal';
+  } else if (sim.mode === 'land') {
+    status = 'Aero-drive · Crr 0.10 · terminal 78 km/h @ peak T';
+  } else {
+    status = 'Planing · packed buoyancy 1.93:1 · Vmax 10 km/h';
+  }
+
+  document.getElementById('telSpeed').innerHTML = sim.speedKmh.toFixed(1) + ' <span class="text-xs text-slate-500">KM/H</span>';
+  document.getElementById('telHdg').textContent = ((sim.heading % 360 + 360) % 360).toFixed(0).padStart(3, '0') + '°';
+  document.getElementById('telStatus').textContent = status;
+  document.getElementById('telStatus').style.color = m.color;
+  document.getElementById('telCurrent').innerHTML = sim.current.toFixed(1) + ' <span class="text-xs text-slate-500">A</span>';
+  const ceilEl = document.getElementById('telICeil');
+  if (ceilEl) {
+    ceilEl.textContent = sim.mode === 'air'
+      ? ('bus≤' + PHYS.I_CEIL_AIR + ' A · 4×' + PHYS.I_MOTOR_CEIL + ' A cont. · taxi land ' + PHYS.I_LAND + ' A / water ' + PHYS.I_WATER + ' A')
+      : (sim.mode === 'land'
+        ? ('design taxi ' + PHYS.I_LAND + ' A @ 11.1 V · sprint uses remaining A2212 headroom')
+        : ('design water ' + PHYS.I_WATER + ' A · paddle + spray load'));
+  }
+  const hud = document.getElementById('mixHud');
+  if (hud) {
+    hud.innerHTML = sim.motors.map(mot => {
+      const pct = Math.round(mot.mix * 100);
+      const col = mot.mix > 1.15 ? '#F59E0B' : mot.mix < 0.85 ? '#64748b' : '#10B981';
+      return '<div>' + mot.id + ' ' + pct + '% <span class="text-slate-500">' + mot.I.toFixed(1) + 'A</span><div class="h-1 bg-white/10"><div style="width:' + Math.min(100, (mot.mix / 1.85) * 100) + '%;height:100%;background:' + col + '"></div></div></div>';
+    }).join('');
+  }
+  document.getElementById('telTW').textContent = sim.tw.toFixed(2) + ' : 1';
+  const soc = sim.wh / PHYS.PACK_WH;
+  const vPack = 9.6 + 3.0 * soc;
+  document.getElementById('telPwr').textContent = sim.powerW.toFixed(0) + ' W  ·  ' + sim.wh.toFixed(1) + ' / ' + PHYS.PACK_WH.toFixed(1) + ' Wh  ·  ' + vPack.toFixed(1) + ' V';
+  const isa = isaAltM(+document.getElementById('simP').value);
+  document.getElementById('telAlt').textContent = 'twin AGL ' + sim.altM.toFixed(1) + ' m  ·  MS5607 ISA ' + isa.toFixed(0) + ' m (SL 1013.25 hPa)';
+  document.getElementById('servoReadout').textContent =
+    'SERVO θ = ' + sim.servo.toFixed(1) + '°  ·  CAM ' + cam.yaw.toFixed(0) + '°/' + cam.pitch.toFixed(0) + '°  ·  drag orbit · Q/E yaw';
+  const batEl = document.getElementById('hdrBat');
+  batEl.textContent = Math.round(soc * 100) + '%';
+  batEl.className = soc > 0.35 ? 'text-nom' : soc > 0.15 ? 'text-warn' : 'text-threat';
+  document.getElementById('hwPredI').textContent =
+    sim.current.toFixed(1) + ' A @ ' + bus.toFixed(1) + ' V  ·  ' + sim.powerW.toFixed(0) + ' W  ·  P_ind≈' +
+    (Math.pow(Math.max(Tup, 0.01) * PHYS.G, 1.5) / Math.sqrt(2 * PHYS.RHO * PHYS.DISK_A)).toFixed(0) + ' W ideal';
+}
+
+function drawKinFrame() {
+  const w = kinCanvas.width / devicePixelRatio, h = kinCanvas.height / devicePixelRatio;
+  if (!w || !h) return;
+  if (cam.auto) cam.ty = (cam.ty + 0.45) % 360;
+  let dy = ((cam.ty - cam.yaw + 540) % 360) - 180;
+  cam.yaw += dy * 0.28;
+  cam.pitch += (cam.tp - cam.pitch) * 0.28;
+  if (!typing() && views.kinematics.classList.contains('active')) {
+    if (keys.has('KeyQ') || keys.has('q') || keys.has('Q')) cam.ty -= 1.6;
+    if (keys.has('KeyE') || keys.has('e') || keys.has('E')) cam.ty += 1.6;
+  }
+  const m = MODE[sim.mode];
+  kctx.clearRect(0, 0, w, h);
+  kctx.fillStyle = sim.mode === 'water' ? '#031018' : '#05080c';
+  kctx.fillRect(0, 0, w, h);
+  const S = Math.min(w, h) / 320;
+  kctx.strokeStyle = sim.mode === 'water' ? 'rgba(59,130,246,.16)' : 'rgba(16,185,129,.12)';
+  kctx.lineWidth = 1;
+  const span = 220, step = 40;
+  for (let x = -span; x <= span; x += step) {
+    const a = proj(x, -span, 0, S, w, h), b = proj(x, span, 0, S, w, h);
+    kctx.beginPath(); kctx.moveTo(a.x, a.y); kctx.lineTo(b.x, b.y); kctx.stroke();
+  }
+  for (let y = -span; y <= span; y += step) {
+    const a = proj(-span, y, 0, S, w, h), b = proj(span, y, 0, S, w, h);
+    kctx.beginPath(); kctx.moveTo(a.x, a.y); kctx.lineTo(b.x, b.y); kctx.stroke();
+  }
+  for (let i = sim.particles.length - 1; i >= 0; i--) {
+    const p = sim.particles[i];
+    p.x += p.vx; p.y += p.vy; p.z += (p.vz || 0); p.life -= 0.035;
+    if (p.life <= 0) { sim.particles.splice(i, 1); continue; }
+    const s = proj(p.x, p.y, p.z, S, w, h);
+    kctx.fillStyle = p.col + (p.life * 0.6).toFixed(2) + ')';
+    kctx.beginPath(); kctx.arc(s.x, s.y, 3.2 * p.life, 0, Math.PI * 2); kctx.fill();
+  }
+  drawDrone3(kctx, w, h, S);
+  kctx.fillStyle = 'rgba(148,163,184,.7)';
+  kctx.font = '11px IBM Plex Mono';
+  kctx.fillText('DRAG orbit · Q/E cam · arrows mix FL/FR/RL/RR · I≤' + sim.iCeil.toFixed(0) + 'A', 12, h - 12);
+  const aw = ampCanvas.width / devicePixelRatio, ah = ampCanvas.height / devicePixelRatio;
+  const iScale = Math.max(sim.iCeil, sim.current, 10);
+  actx.clearRect(0, 0, aw, ah);
+  actx.strokeStyle = m.color; actx.lineWidth = 1.5; actx.beginPath();
+  sim.ampHist.forEach((v, i) => {
+    const x = (i / (sim.ampHist.length - 1)) * aw;
+    const y = ah - (Math.min(v, iScale) / iScale) * ah;
+    i ? actx.lineTo(x, y) : actx.moveTo(x, y);
+  });
+  actx.stroke();
+}
+
+/* hardware 3D */
+const hwCanvas = document.getElementById('hwCanvas');
+const hctx = hwCanvas.getContext('2d');
+function resizeHw() {
+  if (!hwCanvas.parentElement) return;
+  const r = hwCanvas.parentElement.getBoundingClientRect();
+  hwCanvas.width = Math.max(1, r.width) * devicePixelRatio;
+  hwCanvas.height = Math.max(1, r.height) * devicePixelRatio;
+  hctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+}
+function setHwPart(id) {
+  hwPart = id || '';
+  document.querySelectorAll('.hw-part-btn').forEach(b => b.classList.toggle('on', b.dataset.part === hwPart));
+  const el = document.querySelector('.hw-part-btn.on');
+  if (el) el.scrollIntoView({ block: 'nearest' });
+}
+function setHwFocus(id, keepCam) {
+  if (!HW[id]) id = 'airframe';
+  hwFocus = id;
+  hwPart = '';
+  const H = HW[id];
+  document.getElementById('hwTitle').textContent = H.title;
+  document.getElementById('hwTitle').style.color = H.color;
+  document.getElementById('hwInspect').innerHTML = H.html;
+  document.querySelectorAll('.hw-card').forEach(c => c.classList.toggle('active', c.dataset.hw === id));
+  if (!keepCam) {
+    hwCam.ty = H.cam.yaw; hwCam.tp = H.cam.pitch; hwCam.zoom = H.cam.zoom; hwCam.auto = false;
+    document.getElementById('btnHwOrbit').classList.remove('on');
+    document.querySelectorAll('.hw-cam').forEach(b => b.classList.remove('on'));
+  }
+}
+document.querySelectorAll('.hw-card').forEach(card => {
+  card.addEventListener('click', () => setHwFocus(card.dataset.hw));
+});
+document.getElementById('hwInspect').addEventListener('click', e => {
+  const b = e.target.closest('.hw-part-btn');
+  if (b) { e.preventDefault(); setHwPart(b.dataset.part); }
+});
+document.querySelectorAll('#busV, #hwVec, #thrSlider, #cmdThr, #simP, #simD').forEach(el => {
+  el.addEventListener('click', e => e.stopPropagation());
+});
+document.getElementById('busV').addEventListener('input', e => { document.getElementById('busVLab').textContent = (+e.target.value).toFixed(1); });
+document.getElementById('hwVec').addEventListener('input', e => {
+  document.getElementById('hwVecLab').textContent = e.target.value;
+  sim.hwLockServo = true;
+  document.getElementById('liveFw').checked = false;
+  if (+e.target.value < 45) setMode('air'); else if (sim.mode === 'air') setMode('land');
+});
+document.querySelectorAll('.hw-cam').forEach(b => b.addEventListener('click', () => {
+  const p = CAM_PRESETS[b.dataset.hcam];
+  if (!p) return;
+  hwCam.ty = p.yaw; hwCam.tp = p.pitch; hwCam.auto = false;
+  document.querySelectorAll('.hw-cam').forEach(x => x.classList.toggle('on', x === b));
+  document.getElementById('btnHwOrbit').classList.remove('on');
+}));
+document.getElementById('btnHwOrbit').addEventListener('click', () => {
+  hwCam.auto = !hwCam.auto;
+  document.getElementById('btnHwOrbit').classList.toggle('on', hwCam.auto);
+  if (hwCam.auto) document.querySelectorAll('.hw-cam').forEach(b => b.classList.remove('on'));
+});
+hwCanvas.addEventListener('pointerdown', e => {
+  hwCam.drag = true; hwCam.lx = e.clientX; hwCam.ly = e.clientY; hwCam.auto = false;
+  hwMoved = 0;
+  document.getElementById('btnHwOrbit').classList.remove('on');
+  hwCanvas.classList.add('drag');
+  hwCanvas.setPointerCapture(e.pointerId);
+});
+hwCanvas.addEventListener('pointerup', e => {
+  hwCam.drag = false; hwCanvas.classList.remove('drag');
+  if (hwMoved < 8 && hwLabels.length) {
+    const r = hwCanvas.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    let best = null, bd = 36;
+    hwLabels.forEach(L => {
+      const d = Math.hypot(L.x - mx, L.y - my);
+      if (d < bd) { bd = d; best = L; }
+    });
+    if (best) setHwPart(best.id);
+  }
+});
+hwCanvas.addEventListener('pointermove', e => {
+  if (!hwCam.drag) return;
+  hwMoved += Math.hypot(e.clientX - hwCam.lx, e.clientY - hwCam.ly);
+  hwCam.ty = (hwCam.ty + (e.clientX - hwCam.lx) * 0.45 + 360) % 360;
+  hwCam.tp = Math.max(8, Math.min(88, hwCam.tp - (e.clientY - hwCam.ly) * 0.35));
+  hwCam.lx = e.clientX; hwCam.ly = e.clientY;
+});
+hwCanvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  hwCam.zoom = Math.max(0.4, Math.min(2.2, hwCam.zoom * (e.deltaY > 0 ? 0.92 : 1.08)));
+}, { passive: false });
+setHwFocus('airframe', true);
+
+/* usages */
+const mapCanvas = document.getElementById('mapCanvas');
+const mctx = mapCanvas.getContext('2d');
+function resizeMap() {
+  const r = mapCanvas.parentElement.getBoundingClientRect();
+  mapCanvas.width = Math.max(1, r.width) * devicePixelRatio;
+  mapCanvas.height = Math.max(1, r.height) * devicePixelRatio;
+  mctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+}
+let mapMoved = 0;
+mapCanvas.addEventListener('pointerdown', e => {
+  useCam.drag = true; useCam.lx = e.clientX; useCam.ly = e.clientY; useCam.auto = false;
+  mapMoved = 0;
+  const bo = document.getElementById('btnUseOrbit');
+  if (bo) bo.classList.remove('on');
+  mapCanvas.classList.add('drag');
+  mapCanvas.setPointerCapture(e.pointerId);
+});
+mapCanvas.addEventListener('pointerup', e => {
+  useCam.drag = false; mapCanvas.classList.remove('drag');
+  if (mapMoved < 8) {
+    const r = mapCanvas.getBoundingClientRect();
+    const w = r.width, h = r.height;
+    const S = Math.min(w, h) / 380;
+    wp = unprojGround(e.clientX - r.left, e.clientY - r.top, S, w, h, useCam);
+    wp.x = clamp(wp.x, -180, 180);
+    wp.y = clamp(wp.y, -180, 180);
+  }
+});
+mapCanvas.addEventListener('pointermove', e => {
+  if (!useCam.drag) return;
+  mapMoved += Math.hypot(e.clientX - useCam.lx, e.clientY - useCam.ly);
+  useCam.ty = (useCam.ty + (e.clientX - useCam.lx) * 0.45 + 360) % 360;
+  useCam.tp = Math.max(8, Math.min(88, useCam.tp - (e.clientY - useCam.ly) * 0.35));
+  useCam.lx = e.clientX; useCam.ly = e.clientY;
+});
+mapCanvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  useCam.zoom = Math.max(0.4, Math.min(1.8, useCam.zoom * (e.deltaY > 0 ? 0.92 : 1.08)));
+}, { passive: false });
+document.querySelectorAll('.use-cam').forEach(b => b.addEventListener('click', () => {
+  const p = CAM_PRESETS[b.dataset.ucam];
+  if (!p) return;
+  useCam.ty = p.yaw; useCam.tp = p.pitch; useCam.auto = false;
+  document.querySelectorAll('.use-cam').forEach(x => x.classList.toggle('on', x === b));
+  document.getElementById('btnUseOrbit').classList.remove('on');
+}));
+document.getElementById('btnUseOrbit').addEventListener('click', () => {
+  useCam.auto = !useCam.auto;
+  document.getElementById('btnUseOrbit').classList.toggle('on', useCam.auto);
+});
+document.querySelectorAll('.usage-item').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.usage-item').forEach(x => x.classList.remove('active'));
+    el.classList.add('active');
+    usageId = +el.dataset.u; usageT = 0; wp = null;
+    asset3.x = 0; asset3.y = 0;
+    const U = USAGES[usageId];
+    document.getElementById('usageTitle').textContent = U.title;
+    document.getElementById('usageTitle').style.color = U.color;
+    const lf = document.getElementById('liveFw');
+    if (lf) lf.checked = false;
+    sim.hwLockServo = false;
+    sim.estop = false;
+    setMode(U.domain);
+    if (U.domain === 'air') setThrottle(47, 'kin');
+    else if (U.domain === 'land') setThrottle(82, 'kin');
+    else setThrottle(62, 'kin');
+  });
+});
+
+function box3(ctx, x0, y0, z0, x1, y1, z1, fill, stroke, S, w, h, prim) {
+  const c = [
+    [x0,y0,z0],[x1,y0,z0],[x1,y1,z0],[x0,y1,z0],
+    [x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]
+  ].map(p => proj(p[0], p[1], p[2], S, w, h));
+  [[0,1,2,3],[4,5,6,7],[0,1,5,4],[2,3,7,6],[0,3,7,4],[1,2,6,5]].forEach(f => {
+    const pts = f.map(i => c[i]);
+    const d = pts.reduce((s, p) => s + p.d, 0) / 4;
+    prim.push({ d, draw: () => drawPoly(ctx, pts, fill, stroke, 1) });
+  });
+}
+
+function hwSty(id, fill, stroke) {
+  if (hwPart && hwPart !== id) return { fill: 'rgba(15,23,42,.45)', stroke: '#1e293b' };
+  if (hwPart === id) return { fill, stroke: '#fbbf24' };
+  return { fill, stroke };
+}
+
+function drawHwFrame() {
+  const w = hwCanvas.width / devicePixelRatio, h = hwCanvas.height / devicePixelRatio;
+  if (!w || !h) return;
+  if (hwCam.auto) hwCam.ty = (hwCam.ty + 0.4) % 360;
+  let dy = ((hwCam.ty - hwCam.yaw + 540) % 360) - 180;
+  hwCam.yaw += dy * 0.25;
+  hwCam.pitch += (hwCam.tp - hwCam.pitch) * 0.25;
+  if (!typing() && views.hardware.classList.contains('active')) {
+    if (keys.has('q') || keys.has('Q')) hwCam.ty -= 1.6;
+    if (keys.has('e') || keys.has('E')) hwCam.ty += 1.6;
+  }
+  const H = HW[hwFocus] || HW.airframe;
+  const sky = hctx.createLinearGradient(0, 0, 0, h);
+  sky.addColorStop(0, '#0a1218');
+  sky.addColorStop(1, '#03060a');
+  hctx.fillStyle = sky;
+  hctx.fillRect(0, 0, w, h);
+
+  projCam = hwCam;
+  projHdg = 0;
+  projOffset = { x: 0, y: 0, z: 0 };
+  const S = Math.min(w, h) / 340;
+  const prim = [];
+  hwLabels = [];
+  const lab = (id, text, x, y, z, col) => {
+    const p = proj(x, y, z, S, w, h);
+    hwLabels.push({ id, text, x: p.x, y: p.y, col: col || H.color, d: p.d });
+  };
+  const box = (id, x0, y0, z0, x1, y1, z1, fill, stroke) => {
+    const s = hwSty(id, fill, stroke);
+    box3(hctx, x0, y0, z0, x1, y1, z1, s.fill, s.stroke, S, w, h, prim);
+  };
+
+  const g0 = proj(-200, -200, 0, S, w, h), g1 = proj(200, -200, 0, S, w, h);
+  const g2 = proj(200, 200, 0, S, w, h), g3 = proj(-200, 200, 0, S, w, h);
+  drawPoly(hctx, [g0, g1, g2, g3], '#0b1220', 'rgba(16,185,129,.12)', 1);
+
+  if (hwFocus === 'airframe' || hwFocus === 'actuation') {
+    emitThrust = hwFocus === 'actuation';
+    projOffset = { x: 0, y: 0, z: hwFocus === 'airframe' ? 28 : 22 };
+    drawDrone3(hctx, w, h, S * (hwFocus === 'actuation' ? 0.92 : 0.78));
+    emitThrust = true;
+    projOffset = { x: 0, y: 0, z: 0 };
+    lab('mot', 'A2212 ×4', 108, 82, 70, '#EF4444');
+    lab('servo', 'DS3218 vector', 0, 0, 78, '#F59E0B');
+  }
+  if (hwFocus === 'airframe') {
+    box('dom_air', -170, -40, 0, -90, 40, 18, 'rgba(16,185,129,.35)', '#10B981');
+    box('dom_land', -40, -40, 0, 40, 40, 18, 'rgba(245,158,11,.35)', '#F59E0B');
+    box('dom_water', 90, -40, 0, 170, 40, 18, 'rgba(59,130,246,.35)', '#3B82F6');
+    lab('dom_air', 'AIR 0°', -130, 0, 28, '#10B981');
+    lab('dom_land', 'LAND 90°', 0, 0, 28, '#F59E0B');
+    lab('dom_water', 'WATER 90°', 130, 0, 28, '#3B82F6');
+  }
+  if (hwFocus === 'avionics') {
+    box('pcb', -90, -60, 0, 90, 60, 3, '#14532d', '#22c55e');
+    box('u1', -22, -18, 3, 22, 18, 14, '#e2e8f0', '#94a3b8');
+    box('usb', -90, -10, 3, -72, 10, 8, '#1d4ed8', '#60a5fa');
+    box('ant', 50, -55, 3, 86, -32, 5, 'rgba(15,23,42,.2)', '#3B82F6');
+    box('i2c', -50, 28, 3, -20, 48, 9, '#0ea5e9', '#38bdf8');
+    box('i2c', 20, 28, 3, 50, 48, 9, '#8b5cf6', '#a78bfa');
+    box('boot', -8, -48, 3, 8, -40, 6, '#f97316', '#fdba74');
+    lab('u1', 'U1 ESP32-S3', 0, 0, 20);
+    lab('usb', 'J1 USB-C', -80, 0, 14, '#60a5fa');
+    lab('ant', 'ANT KEEP-OUT', 68, -44, 12, '#3B82F6');
+    lab('i2c', 'I2C 23/24', 0, 40, 16, '#38bdf8');
+    lab('usb', 'EN/BOOT', 0, -44, 12, '#fdba74');
+  }
+  if (hwFocus === 'power') {
+    box('pack', -120, -30, 0, -40, 30, 36, '#1c1917', '#a8a29e');
+    box('pdb', -20, -40, 0, 50, 40, 10, '#7f1d1d', '#ef4444');
+    box('ldo', 70, -20, 0, 110, 8, 14, '#14532d', '#10B981');
+    box('cap', 70, 16, 0, 92, 38, 22, '#fef08a', '#eab308');
+    box('div', 20, 48, 0, 70, 62, 6, '#334155', '#94a3b8');
+    box('rail3', 70, -20, 16, 160, -12, 20, '#10B981', '#6ee7b7');
+    box('railV', -20, -8, 12, 160, 0, 16, '#F59E0B', '#fcd34d');
+    lab('pack', '3S 5Ah 55.5Wh', -80, 0, 42, '#e7e5e4');
+    lab('pdb', 'Matek PDB', 15, 0, 18, '#fca5a5');
+    lab('ldo', 'AP2112K 3.3V', 90, -6, 20, '#6ee7b7');
+    lab('cap', '470µF servo', 81, 27, 28, '#fde047');
+    lab('div', '100k/22k IO1', 45, 55, 12, '#94a3b8');
+  }
+  if (hwFocus === 'actuation') {
+    lab('esc', 'ESC IO4/7/15/16', 0, -90, 20, '#fca5a5');
+    lab('hinge', 'θ=' + sim.servo.toFixed(0) + '°  SF 1.42', 0, 40, 8, '#fdba74');
+    lab('mot', '12.5 A cont / 1.18 kgf burst', 0, 100, 50, '#EF4444');
+  }
+  if (hwFocus === 'sensors') {
+    box('pcb', -70, -40, 0, 70, 40, 3, '#14532d', '#22c55e');
+    box('imu', -24, -12, 3, 0, 12, 10, '#e2e8f0', '#94a3b8');
+    box('baro', 8, -12, 3, 28, 12, 8, '#1e3a5f', '#3B82F6');
+    box('tof', 36, -16, 3, 68, 16, 16, '#fef3c7', '#F59E0B');
+    box('div5', 36, 20, 3, 68, 32, 8, '#334155', '#94a3b8');
+    const cone = diskPts(88, 0, 10, 1, 0, 0, 28 + 8 * Math.sin(sim.t * 3), 16, S, w, h);
+    prim.push({ d: cone[0].d, draw: () => drawPoly(hctx, cone, 'rgba(59,130,246,.12)', '#60a5fa', 1) });
+    lab('imu', 'MPU-6050', -12, 0, 16);
+    lab('baro', 'MS5607', 18, 0, 16, '#3B82F6');
+    lab('tof', 'HC-SR04', 52, 0, 22, '#F59E0B');
+    lab('div5', 'R9/R10', 52, 26, 12);
+  }
+  if (hwFocus === 'mobility') {
+    [[-50, -40], [50, -40], [-50, 40], [50, 40]].forEach((wh, i) => {
+      const id = 'wheel';
+      const s = hwSty(id, sim.mode === 'water' ? '#0b1a2e' : '#1e293b', sim.mode === 'water' ? '#60a5fa' : '#94a3b8');
+      const pts = diskPts(wh[0], wh[1], 22, 1, 0, 0, 22, 18, S, w, h);
+      const d = pts.reduce((a, p) => a + p.d, 0) / pts.length;
+      prim.push({ d, draw: () => {
+        drawPoly(hctx, pts, s.fill, s.stroke, 1.6);
+        const hub = proj(wh[0], wh[1], 22, S, w, h);
+        hctx.strokeStyle = s.stroke;
+        for (let k = 0; k < 8; k++) {
+          const a = sim.wheel + k * Math.PI / 4;
+          const q = proj(wh[0], wh[1] + Math.cos(a) * 18, 22 + Math.sin(a) * 18, S, w, h);
+          hctx.beginPath(); hctx.moveTo(hub.x, hub.y); hctx.lineTo(q.x, q.y); hctx.stroke();
+        }
+      }});
+      if (i === 0) lab('wheel', 'Ø 190 mm XPS', wh[0], wh[1], 48);
+    });
+    box('vol', -28, -22, 8, 28, 22, 28, '#334155', '#10B981');
+    box('paddle', -28, 22, 0, 28, 36, 8, '#14532d', '#22c55e');
+    lab('vol', '4.84 L / 1.93:1', 0, 0, 36, '#6ee7b7');
+    lab('paddle', 'freewheel + aero-drive', 0, 30, 14, '#86efac');
+    if (sim.mode === 'water') {
+      const wave = [];
+      for (let x = -120; x <= 120; x += 12) wave.push(proj(x, 70, 4 + Math.sin(x * 0.08 + sim.t * 2) * 2, S, w, h));
+      for (let x = 120; x >= -120; x -= 12) wave.push(proj(x, 110, 3, S, w, h));
+      drawPoly(hctx, wave, 'rgba(20,90,140,.4)', 'rgba(96,165,250,.45)', 1);
+    }
+  }
+
+  prim.sort((a, b) => a.d - b.d);
+  prim.forEach(p => p.draw());
+  hwLabels.sort((a, b) => a.d - b.d);
+  hctx.font = '11px IBM Plex Mono';
+  hwLabels.forEach(L => {
+    const tw = hctx.measureText(L.text).width;
+    hctx.fillStyle = 'rgba(2,6,10,.72)';
+    hctx.fillRect(L.x + 6, L.y - 12, tw + 10, 16);
+    hctx.fillStyle = L.col;
+    hctx.fillText(L.text, L.x + 10, L.y);
+    hctx.beginPath(); hctx.arc(L.x, L.y, hwPart === L.id ? 4.5 : 3, 0, Math.PI * 2); hctx.fill();
+  });
+
+  projCam = null; projHdg = null; projOffset = { x: 0, y: 0, z: 0 };
+  hctx.fillStyle = 'rgba(226,232,240,.85)';
+  hctx.font = '11px IBM Plex Mono';
+  hctx.fillText(H.title + '  ·  ' + MODE[sim.mode].domain + '  ·  θ=' + sim.servo.toFixed(0) +
+    '°  ·  ' + (+document.getElementById('busV').value).toFixed(1) + ' V  ·  click labels', 12, h - 14);
+}
+
+function drawMap(dt) {
+  const w = mapCanvas.width / devicePixelRatio, h = mapCanvas.height / devicePixelRatio;
+  if (!w || !h) return;
+  const U = USAGES[usageId];
+  const kind = U.kind;
+  if (useCam.auto) useCam.ty = (useCam.ty + 0.35) % 360;
+  let dyc = ((useCam.ty - useCam.yaw + 540) % 360) - 180;
+  useCam.yaw += dyc * 0.25;
+  useCam.pitch += (useCam.tp - useCam.pitch) * 0.25;
+
+  const sky = mctx.createLinearGradient(0, 0, 0, h);
+  sky.addColorStop(0, U.sky1);
+  sky.addColorStop(1, U.sky0);
+  mctx.fillStyle = sky;
+  mctx.fillRect(0, 0, w, h);
+
+  projCam = useCam;
+  projHdg = 0;
+  projOffset = { x: 0, y: 0, z: 0 };
+  const S = Math.min(w, h) / 380;
+  const prim = [];
+
+  const g0 = proj(-220, -220, 0, S, w, h), g1 = proj(220, -220, 0, S, w, h);
+  const g2 = proj(220, 220, 0, S, w, h), g3 = proj(-220, 220, 0, S, w, h);
+  drawPoly(mctx, [g0, g1, g2, g3], U.ground, 'rgba(255,255,255,.06)', 1);
+
+  if (kind === 'defence' || kind === 'radar') {
+    for (let i = -3; i <= 3; i++) {
+      box3(mctx, -90, i * 28 - 8, 0, -84, i * 28 + 8, 22, '#3f3f46', '#71717a', S, w, h, prim);
+      box3(mctx, 84, i * 28 - 8, 0, 90, i * 28 + 8, 22, '#3f3f46', '#71717a', S, w, h, prim);
+    }
+    box3(mctx, -20, -100, 0, 20, -88, 36, '#1c1917', U.color, S, w, h, prim);
+  }
+  if (kind === 'radar' || kind === 'sonar' || kind === 'port' || kind === 'grid' || kind === 'bridge') {
+    const wave = [];
+    for (let x = -220; x <= 220; x += 16) {
+      const z = (kind === 'grid' ? 6 : 2) + Math.sin(x * 0.03 + usageT * 2) * 2;
+      wave.push(proj(x, 40, z, S, w, h));
+    }
+    for (let x = 220; x >= -220; x -= 16) {
+      const z = 1 + Math.sin(x * 0.03 + usageT * 2.2) * 2;
+      wave.push(proj(x, 200, z, S, w, h));
+    }
+    drawPoly(mctx, wave, kind === 'grid' ? 'rgba(30,80,120,.55)' : 'rgba(20,90,140,.5)', 'rgba(96,165,250,.4)', 1);
+  }
+  if (kind === 'grid') {
+    box3(mctx, -70, -20, 8, 70, 0, 18, '#44403c', '#a8a29e', S, w, h, prim);
+    box3(mctx, -20, -20, 8, 10, 50, 16, '#57534e', '#d6d3d1', S, w, h, prim);
+  }
+  if (kind === 'chase') {
+    box3(mctx, -18, -180, 0, 18, 180, 2, '#1c1917', '#44403c', S, w, h, prim);
+    const tx = 40 + Math.sin(usageT * 1.4) * 70, ty = -60 + ((usageT * 55) % 200) - 100;
+    box3(mctx, tx - 8, ty - 12, 0, tx + 8, ty + 12, 10, '#94a3b8', '#e2e8f0', S, w, h, prim);
+  }
+  if (kind === 'port') {
+    box3(mctx, -180, -40, 0, 40, -10, 12, '#292524', '#78716c', S, w, h, prim);
+    box3(mctx, 50, 20, 0, 160, 90, 28, '#1e293b', '#64748b', S, w, h, prim);
+  }
+  if (kind === 'fire') {
+    for (let i = 0; i < 12; i++) {
+      const fx0 = -90 + i * 16, fy0 = 20 + Math.sin(i) * 40;
+      const zh = 20 + (Math.sin(usageT * 6 + i) * 0.5 + 0.5) * 40;
+      box3(mctx, fx0, fy0, 0, fx0 + 8, fy0 + 8, zh, 'rgba(249,115,22,.7)', '#f97316', S, w, h, prim);
+    }
+  }
+  if (kind === 'aid') {
+    for (let i = 0; i < 5; i++) box3(mctx, -80 + i * 32, 50, 0, -64 + i * 32, 70, 18, '#44403c', '#a8a29e', S, w, h, prim);
+  }
+  if (kind === 'bridge') {
+    box3(mctx, -140, -18, 14, 140, 18, 22, '#57534e', '#d6d3d1', S, w, h, prim);
+    box3(mctx, -100, -14, 0, -88, 14, 16, '#44403c', '#a8a29e', S, w, h, prim);
+    box3(mctx, 88, -14, 0, 100, 14, 16, '#44403c', '#a8a29e', S, w, h, prim);
+  }
+  if (kind === 'haz') {
+    box3(mctx, 40, 40, 0, 70, 70, 22, '#365314', '#a3e635', S, w, h, prim);
+    box3(mctx, 80, 30, 0, 100, 55, 18, '#3f6212', '#84cc16', S, w, h, prim);
+  }
+  if (kind === 'sonar') {
+    for (let i = 0; i < 8; i++) box3(mctx, -100 + i * 24, 70, 0, -92 + i * 24, 90, 10 + Math.sin(usageT + i) * 4, '#14532d', '#22c55e', S, w, h, prim);
+  }
+
+  prim.sort((a, b) => a.d - b.d);
+  prim.forEach(p => p.draw());
+
+  if (kind === 'defence' || kind === 'radar') {
+    const sweep = usageT * 1.6;
+    const c = proj(asset3.x, asset3.y, 50, S, w, h);
+    mctx.fillStyle = U.color + '28';
+    mctx.beginPath(); mctx.moveTo(c.x, c.y);
+    mctx.arc(c.x, c.y, 90, sweep - 0.5, sweep); mctx.fill();
+    mctx.strokeStyle = U.color; mctx.beginPath(); mctx.moveTo(c.x, c.y);
+    mctx.lineTo(c.x + Math.cos(sweep) * 90, c.y + Math.sin(sweep) * 90); mctx.stroke();
+  }
+  if (kind === 'sonar' || kind === 'haz' || kind === 'port') {
+    const c = proj(asset3.x, asset3.y, 2, S, w, h);
+    for (let i = 0; i < 4; i++) {
+      const rr = ((usageT * 40 + i * 22) % 90);
+      mctx.strokeStyle = 'rgba(59,130,246,' + (1 - rr / 90) + ')';
+      mctx.beginPath(); mctx.arc(c.x, c.y, rr, 0, Math.PI * 2); mctx.stroke();
+    }
+  }
+
+  emitThrust = false;
+  projOffset = { x: asset3.x, y: asset3.y, z: sim.mode === 'air' ? clamp(12 + sim.altM * 3.5, 12, 90) : (sim.mode === 'water' ? 6 : 8) };
+  projHdg = asset3.hdg;
+  drawDrone3(mctx, w, h, S * 0.42);
+  emitThrust = true;
+  if (wp) {
+    projOffset = { x: 0, y: 0, z: 0 };
+    projHdg = 0;
+    const q = proj(wp.x, wp.y, 0, S, w, h);
+    mctx.strokeStyle = U.color;
+    mctx.beginPath(); mctx.arc(q.x, q.y, 8, 0, Math.PI * 2); mctx.stroke();
+  }
+  projOffset = { x: 0, y: 0, z: 0 };
+  projCam = null;
+  projHdg = null;
+
+  mctx.fillStyle = 'rgba(226,232,240,.85)';
+  mctx.font = '11px IBM Plex Mono';
+  mctx.fillText(U.title + '  ·  ' + MODE[sim.mode].domain + '  ·  ' + sim.speedKmh.toFixed(0) + ' km/h  ·  ' +
+    sim.current.toFixed(1) + ' A  ·  θ=' + sim.servo.toFixed(0) + '°  ·  click=WP (ground plane)', 12, h - 14);
+}
+
+/* firmware */
+const codeArea = document.getElementById('codeArea');
+const lineNums = document.getElementById('lineNums');
+codeArea.value = DEFAULT_FW;
+function syncLines() {
+  const n = codeArea.value.split('\n').length;
+  lineNums.textContent = Array.from({ length: n }, (_, i) => i + 1).join('\n');
+}
+codeArea.addEventListener('input', () => { syncLines(); rebuildPalette(); });
+codeArea.addEventListener('scroll', () => { lineNums.scrollTop = codeArea.scrollTop; });
+syncLines();
+document.getElementById('simP').addEventListener('input', e => {
+  document.getElementById('pLab').textContent = e.target.value;
+  document.getElementById('isaLab').textContent = isaAltM(+e.target.value).toFixed(0);
+});
+document.getElementById('simD').addEventListener('input', e => document.getElementById('dLab').textContent = e.target.value);
+document.getElementById('isaLab').textContent = isaAltM(+document.getElementById('simP').value).toFixed(0);
+
+function parseCmds(src) {
+  const cmds = [];
+  const re = /\/\/\s*@CMD\s+id=(\S+)\s+method=(GET|POST)\s+path=(\S+)\s+args=(\S*)\s+label=(.+)/g;
+  let m;
+  while ((m = re.exec(src))) cmds.push({ id: m[1], method: m[2], path: m[3], args: m[4] === '' ? '' : m[4], label: m[5].trim() });
+  if (!cmds.length) {
+    const re2 = /server\.on\(\s*"([^"]+)"/g;
+    let m2;
+    while ((m2 = re2.exec(src))) cmds.push({ id: m2[1], method: 'POST', path: m2[1], args: '', label: m2[1] });
+  }
+  return cmds;
+}
+
+function simulateTick() {
+  const src = codeArea.value;
+  const P = +document.getElementById('simP').value;
+  const D = +document.getElementById('simD').value;
+  const pLt = /pressure\s*<\s*([\d.]+)/.exec(src);
+  const dGt = /distance\s*>\s*([\d.]+)/.exec(src);
+  const thrP = pLt ? +pLt[1] : 1000;
+  const thrD = dGt ? +dGt[1] : 100;
+  const air = P < thrP && D > thrD;
+  const vecAir = /vectorServos\((\d+)\).*VTOL|DOMAIN_AIR[\s\S]{0,80}vectorServos\((\d+)\)/.exec(src);
+  const deg = air ? (vecAir ? +(vecAir[1] || vecAir[2] || 0) : 0) : 90;
+  setMode(air ? 'air' : (sim.mode === 'water' ? 'water' : 'land'));
+  sim.hwLockServo = false;
+  const msg = 'P=' + P + ' hPa  d=' + D + ' mm  →  ' + (air ? 'DOMAIN_AIR' : 'DOMAIN_SURFACE') + '  vectorServos(' + deg + ')  [thr P<' + thrP + ' && d>' + thrD + ']';
+  document.getElementById('simResult').textContent = msg;
+  logSerial('<span class="text-marine">' + msg + '</span>');
+  return msg;
+}
+
+const serialOut = document.getElementById('serialOut');
+function logSerial(html) {
+  serialOut.innerHTML += '<div>' + html + '</div>';
+  serialOut.scrollTop = serialOut.scrollHeight;
+}
+document.getElementById('btnCompile').addEventListener('click', () => {
+  serialOut.innerHTML = '';
+  const src = codeArea.value;
+  const issues = [];
+  let depth = 0;
+  for (const ch of src) {
+    if (ch === '{') depth++;
+    if (ch === '}') depth--;
+    if (depth < 0) { issues.push('extra }'); break; }
+  }
+  if (depth) issues.push('unbalanced { } (' + depth + ')');
+  if (!src.includes('SensorTask')) issues.push('SensorTask missing');
+  if (!/pressure\s*<\s*[\d.]+/.test(src)) issues.push('pressure threshold missing');
+  if (!/distance\s*>\s*[\d.]+/.test(src)) issues.push('ToF threshold missing');
+  if (!src.includes('vectorServos')) issues.push('vectorServos missing');
+  const cmds = parseCmds(src);
+  logSerial('<span class="text-slate-500">static check · ' + src.length + ' bytes · ' + src.split('\n').length + ' lines</span>');
+  if (issues.length) issues.forEach(i => logSerial('<span class="text-threat">ERR ' + i + '</span>'));
+  else {
+    logSerial('<span class="text-nom">OK braces · SensorTask law · ' + cmds.length + ' C2 routes</span>');
+    logSerial('<span class="text-slate-500">This is a dashboard lint, not an xtensa compile. FLASH stores the image for Command.</span>');
+  }
+});
+document.getElementById('btnSim').addEventListener('click', simulateTick);
+document.getElementById('btnSimRun').addEventListener('click', () => {
+  let i = 0;
+  const id = setInterval(() => { simulateTick(); if (++i >= 20) clearInterval(id); }, 100);
+});
+document.getElementById('btnFlash').addEventListener('click', () => {
+  flashedFW = codeArea.value;
+  localStorage.setItem('rw_flashed', flashedFW);
+  serialOut.innerHTML = '';
+  logSerial('<span class="text-slate-500">$ esptool.py --chip esp32s3 write_flash 0x0 riftwalker.bin</span>');
+  setTimeout(() => logSerial('<span class="text-warn">Image stored in this browser (localStorage). Join AP RiftWalker to PING 192.168.4.1.</span>'), 300);
+  setTimeout(() => logSerial('<span class="text-nom">Command palette now uses this firmware. No USB flash was performed from the dashboard.</span>'), 900);
+  setTimeout(() => { rebuildPalette(); logSerial('<span class="text-emerald-300">Hard reset · HTTP C2 live in twin; ping hardware when on same WiFi.</span>'); }, 1400);
+});
+document.getElementById('btnParse').addEventListener('click', () => {
+  rebuildPalette();
+  logSerial('<span class="text-nom">Parsed ' + parseCmds(liveFW()).length + ' commands → Command palette</span>');
+  showView('command');
+});
+
+function liveFW() { return flashedFW || codeArea.value; }
+
+function cmdLog(line) {
+  const el = document.getElementById('cmdLog');
+  el.innerHTML += '<div class="text-slate-400">[' + new Date().toISOString().slice(11, 19) + '] ' + line + '</div>';
+  el.scrollTop = el.scrollHeight;
+}
+
+function rebuildPalette() {
+  const box = document.getElementById('cmdPalette');
+  const cmds = parseCmds(liveFW());
+  box.innerHTML = '';
+  if (!cmds.length) box.innerHTML = '<div class="text-slate-500 text-[11px]">No @CMD lines or server.on() in firmware.</div>';
+  cmds.forEach(cmd => {
+    const b = document.createElement('button');
+    b.className = 'text-left panel p-2 font-mono text-[11px] text-nom';
+    b.innerHTML = '<div class="text-slate-500">' + cmd.method + ' ' + cmd.path + '</div>' + cmd.label;
+    b.addEventListener('click', () => fireCmd(cmd));
+    box.appendChild(b);
+  });
+}
+
+function applyLocal(cmd, params) {
+  if (cmd.id === 'ESTOP' || cmd.path.includes('estop')) { sim.estop = true; setThrottle(0, 'cmd'); }
+  if (cmd.id === 'THROTTLE' || cmd.path.includes('throttle')) { sim.estop = false; setThrottle(+(params.pct || 50), 'cmd'); }
+  if (cmd.id === 'DOMAIN' || cmd.path.includes('domain')) {
+    sim.estop = false; sim.hwLockServo = false;
+    const mode = params.mode || 'air';
+    setMode(mode === 'water' ? 'water' : mode === 'air' ? 'air' : 'land');
+  }
+  if (cmd.id === 'VECTOR' || cmd.path.includes('vector')) {
+    sim.hwLockServo = true;
+    document.getElementById('hwVec').value = params.deg || 0;
+    document.getElementById('hwVecLab').textContent = params.deg || 0;
+  }
+  if (cmd.id === 'YAW' || cmd.path.includes('yaw')) sim.heading += +(params.deg || 15);
+}
+
+async function sendRoute(cmd, params, quiet) {
+  const q = new URLSearchParams(params).toString();
+  const path = cmd.path + (q ? (cmd.path.includes('?') ? '&' : '?') + q : '');
+  if (!quiet) cmdLog(cmd.method + ' ' + path + (linkMode === 'twin' ? '  (twin)' : '  → ESP32'));
+  applyLocal(cmd, params);
+  if (linkMode !== 'hw') return;
+  const ip = document.getElementById('espIp').value.trim();
+  const port = document.getElementById('espPort').value.trim();
+  const url = 'http://' + ip + (port === '80' ? '' : ':' + port) + path;
+  try {
+    const r = await fetch(url, { method: cmd.method, mode: 'cors' });
+    const t = await r.text();
+    cmdLog('<span class="text-nom">HTTP ' + r.status + ' ' + t.slice(0, 180) + '</span>');
+    document.getElementById('linkState').textContent = 'Hardware HTTP ' + r.status;
+    document.getElementById('uplinkStatus').textContent = 'ESP32 LIVE';
+    document.getElementById('hdrLink').textContent = ip;
+  } catch (err) {
+    cmdLog('<span class="text-threat">Link fail: ' + err.message + ' — twin still applied. Check WiFi, CORS, IP.</span>');
+    document.getElementById('linkState').textContent = 'Hardware unreachable; twin active';
+  }
+}
+
+function fireCmd(cmd) {
+  const params = {};
+  const args = (cmd.args || '').split(',').map(s => s.trim()).filter(Boolean);
+  args.forEach(a => {
+    if (a === 'pct') params.pct = Math.round(sim.throttle * 100);
+    else if (a === 'deg' && cmd.id === 'VECTOR') params.deg = Math.round(sim.servo);
+    else if (a === 'deg') params.deg = 15;
+    else if (a === 'mode') params.mode = sim.mode;
+    else if (a === 'fx') params.fx = keys.has('ArrowUp') ? 1 : keys.has('ArrowDown') ? -1 : 0;
+    else if (a === 'fy') params.fy = keys.has('ArrowRight') ? 1 : keys.has('ArrowLeft') ? -1 : 0;
+    else params[a] = 0;
+  });
+  sendRoute(cmd, params);
+}
+
+document.getElementById('btnTwin').addEventListener('click', () => {
+  linkMode = 'twin';
+  document.getElementById('linkState').textContent = 'Mode: software twin';
+  document.getElementById('uplinkStatus').textContent = 'TWIN';
+  document.getElementById('hdrLink').textContent = 'ESP32 TWIN';
+  cmdLog('Twin mode — firmware routes apply locally.');
+});
+document.getElementById('btnPing').addEventListener('click', () => {
+  linkMode = 'hw';
+  const telem = parseCmds(liveFW()).find(c => c.id === 'TELEM' || c.path.includes('telemetry')) ||
+    { id: 'TELEM', method: 'GET', path: '/api/telemetry', args: '', label: 'telem' };
+  sendRoute(telem, {});
+});
+function resizeTwin(canvas) {
+  if (!canvas || !canvas.parentElement) return;
+  const r = canvas.parentElement.getBoundingClientRect();
+  canvas.width = Math.max(1, r.width) * devicePixelRatio;
+  canvas.height = Math.max(1, r.height) * devicePixelRatio;
+  canvas.getContext('2d').setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+}
+
+function drawTwinOn(canvas) {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width / devicePixelRatio, h = canvas.height / devicePixelRatio;
+  if (!w || !h) return;
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = sim.mode === 'water' ? '#031018' : '#05080c';
+  ctx.fillRect(0, 0, w, h);
+  const S = Math.min(w, h) / 300;
+  ctx.strokeStyle = sim.mode === 'water' ? 'rgba(59,130,246,.16)' : 'rgba(16,185,129,.12)';
+  const span = 200, step = 40;
+  for (let x = -span; x <= span; x += step) {
+    const a = proj(x, -span, 0, S, w, h), b = proj(x, span, 0, S, w, h);
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  }
+  for (let y = -span; y <= span; y += step) {
+    const a = proj(-span, y, 0, S, w, h), b = proj(span, y, 0, S, w, h);
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  }
+  drawDrone3(ctx, w, h, S);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px IBM Plex Mono';
+  ctx.fillText(MODE[sim.mode].domain + '  θ=' + sim.servo.toFixed(0) + '°  I=' + sim.current.toFixed(1) + '/' + sim.iCeil.toFixed(0) + 'A', 10, 18);
+}
+
+document.getElementById('btnEstop').addEventListener('click', () => {
+  const estop = parseCmds(liveFW()).find(c => c.id === 'ESTOP' || c.path.includes('estop')) ||
+    { id: 'ESTOP', method: 'POST', path: '/api/estop', args: '', label: 'estop' };
+  sendRoute(estop, {});
+});
+function cmdDomain(mode) {
+  const lf = document.getElementById('liveFw');
+  if (lf) lf.checked = false;
+  sim.hwLockServo = false;
+  setMode(mode);
+  sendRoute({ id: 'DOMAIN', method: 'POST', path: '/api/domain', args: 'mode' }, { mode });
+}
+document.getElementById('cmdAir').addEventListener('click', () => cmdDomain('air'));
+document.getElementById('cmdLand').addEventListener('click', () => cmdDomain('land'));
+document.getElementById('cmdWater').addEventListener('click', () => cmdDomain('water'));
+
+let lastStick = 0;
+function stickToLink(dt) {
+  if (!views.command.classList.contains('active')) return;
+  lastStick += dt;
+  if (lastStick < 0.25) return;
+  lastStick = 0;
+  const fx = (keys.has('ArrowUp') ? 1 : 0) + (keys.has('ArrowDown') ? -1 : 0);
+  const fy = (keys.has('ArrowRight') ? 1 : 0) + (keys.has('ArrowLeft') ? -1 : 0);
+  if (fx || fy) {
+    if (linkMode !== 'hw') return;
+    const cmd = parseCmds(liveFW()).find(c => c.id === 'TRANSLATE') ||
+      { id: 'TRANSLATE', method: 'POST', path: '/api/translate', args: 'fx,fy', label: 'translate' };
+    sendRoute(cmd, { fx, fy }, true);
+  }
+}
+
+window.addEventListener('resize', () => {
+  resizeKin(); resizeMap(); resizeHw();
+  resizeTwin(document.getElementById('fwCanvas'));
+  resizeTwin(document.getElementById('cmdCanvas'));
+});
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  integrate(dt);
+  if (views.kinematics.classList.contains('active')) drawKinFrame();
+  if (views.hardware.classList.contains('active')) drawHwFrame();
+  if (views.usages.classList.contains('active')) drawMap(dt);
+  if (views.firmware.classList.contains('active')) drawTwinOn(document.getElementById('fwCanvas'));
+  if (views.command.classList.contains('active')) drawTwinOn(document.getElementById('cmdCanvas'));
+  stickToLink(dt);
+  requestAnimationFrame(loop);
+}
+rebuildPalette();
+cmdLog('Twin ready. Arrows mix motors. AIR/LAND/WATER + THR. ESP32 optional.');
+resizeKin(); resizeMap(); resizeHw();
+resizeTwin(document.getElementById('fwCanvas'));
+resizeTwin(document.getElementById('cmdCanvas'));
+requestAnimationFrame(loop);
+setTimeout(() => {
+  resizeKin(); resizeMap(); resizeHw();
+  resizeTwin(document.getElementById('fwCanvas'));
+  resizeTwin(document.getElementById('cmdCanvas'));
+}, 60);
+</script>
+</body>
+</html>
