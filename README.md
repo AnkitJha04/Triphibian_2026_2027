@@ -202,8 +202,6 @@ That is a much stronger and more realistic technical proposition.
                      │  Power Distribution / BEC   │
                      └─────────────────────────────┘
 
-```markdown
-
 ````
 
 ## System Architecture
@@ -325,7 +323,8 @@ Students must update this section every week.
 | **6** | 27/07–02/08 | Design validation & simulation                 | PCB schematic                 | Mechanical-electronic integration | —             |
 | **7** | 03/08–09/08 | ESP32-S3 schematic & component selection       | PCB routing & verification    | GPIO & power management           | —             |
 | **8** | 10/08–16/08 | PCB routing, ERC/DRC & documentation           | PCB fabrication & procurement | Routing & component placement     | —             |
-| **9** | 17/08–23/08 | Finalized PCB ICs/components and completed PCB design checking and verification.| PCB fabrication & procurement |Component availability and PCB design verification     | —             |
+| **9** | 17/08–23/08 | Finalized and Completed PCB design verification| Working on software           | Component availability            | —             |
+| **10**| 24/08–30/08 | Made control center to control/code the drone  | PCB fabrication & procurement | Software needs and api development| —             |
 
 
 
@@ -423,21 +422,30 @@ BE-Capstone-Project/
 |       ├── Flight Controller.kicad_pro
 |       ├── Flight Controller.kicad_sch
 |       ├── PCB Dimensions.png
+|       ├── IC bom.xlsx
 |       ├── README.md
 |       └── fp-info-cache
 │   └── cad_model
 |       ├── BLDC Holder.ipt
+|       ├── BLDC Holder.stl
 |       ├── Bearing.ipt
+|       ├── Bearing.stl
 |       ├── Body.ipt
+|       ├── Body.stl
 |       ├── Connecting Rod.ipt
+|       ├── Connecting Rod.stl
 |       ├── Final Body.iam
 |       ├── Holder Cover.ipt
+|       ├── Holder Cover.stl
 |       ├── Motor.ipt
 |       ├── Propeller.ipt
 |       ├── README.md
 |       ├── Servo.ipt
+|       ├── Pcb Spacer.stl
 |       ├── TEST ASSEMBLY 1.stl
 |       ├── Top Cover.ipt
+|       ├── Top Cover.stl
+|       ├── Tyres.stl
 |       └── Tyres.ipt
 │
 ├── software/
@@ -448,6 +456,9 @@ BE-Capstone-Project/
 |       ├── libraries.txt
 |       ├── sketch.ino
 |       └── wokwi-project.txt
+|   └── Command and Control center/
+|       ├── README.md
+|       ├── index.html
 │
 ├── images/
 |   ├── circuit_diagram-2.jpg
