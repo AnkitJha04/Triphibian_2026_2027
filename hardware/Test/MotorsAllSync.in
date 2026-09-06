@@ -1,0 +1,339 @@
+#include <ESP32Servo.h>
+
+Servo ESC1;
+Servo ESC2;
+Servo ESC3;
+Servo ESC4;
+
+// -------------------------------------------------------
+// ESC SIGNAL PINS
+// -------------------------------------------------------
+
+const int ESC1_PIN = 18;
+const int ESC2_PIN = 19;
+const int ESC3_PIN = 21;
+const int ESC4_PIN = 22;
+
+// -------------------------------------------------------
+// THROTTLE LIMITS
+// -------------------------------------------------------
+
+const int MIN_THROTTLE = 1000;
+const int MAX_THROTTLE = 1300;
+
+const int THROTTLE_STEP = 10;
+
+// Individual throttle values
+int throttle1 = 1000;
+int throttle2 = 1000;
+int throttle3 = 1000;
+int throttle4 = 1000;
+
+
+// -------------------------------------------------------
+// SET INDIVIDUAL MOTOR THROTTLE
+// -------------------------------------------------------
+
+void setThrottle(int motor, int value) {
+
+  value = constrain(value, MIN_THROTTLE, MAX_THROTTLE);
+
+  switch (motor) {
+
+    case 1:
+      throttle1 = value;
+      ESC1.writeMicroseconds(throttle1);
+      break;
+
+    case 2:
+      throttle2 = value;
+      ESC2.writeMicroseconds(throttle2);
+      break;
+
+    case 3:
+      throttle3 = value;
+      ESC3.writeMicroseconds(throttle3);
+      break;
+
+    case 4:
+      throttle4 = value;
+      ESC4.writeMicroseconds(throttle4);
+      break;
+  }
+
+  Serial.print("Motor ");
+  Serial.print(motor);
+  Serial.print(" Throttle: ");
+  Serial.print(value);
+  Serial.println(" us");
+}
+
+
+// -------------------------------------------------------
+// SET ALL MOTORS TO SAME THROTTLE
+// -------------------------------------------------------
+
+void setAllThrottle(int value) {
+
+  value = constrain(value, MIN_THROTTLE, MAX_THROTTLE);
+
+  throttle1 = value;
+  throttle2 = value;
+  throttle3 = value;
+  throttle4 = value;
+
+  ESC1.writeMicroseconds(value);
+  ESC2.writeMicroseconds(value);
+  ESC3.writeMicroseconds(value);
+  ESC4.writeMicroseconds(value);
+
+  Serial.print("ALL Motors Throttle: ");
+  Serial.print(value);
+  Serial.println(" us");
+}
+
+
+// -------------------------------------------------------
+// STOP ALL MOTORS
+// -------------------------------------------------------
+
+void stopAllMotors() {
+
+  setAllThrottle(MIN_THROTTLE);
+
+  Serial.println();
+  Serial.println("!!! ALL MOTORS STOPPED !!!");
+  Serial.println();
+}
+
+
+// -------------------------------------------------------
+// SHOW THROTTLES
+// -------------------------------------------------------
+
+void showThrottle() {
+
+  Serial.println();
+  Serial.println("Current Throttle:");
+
+  Serial.print("M1 = ");
+  Serial.print(throttle1);
+  Serial.println(" us");
+
+  Serial.print("M2 = ");
+  Serial.print(throttle2);
+  Serial.println(" us");
+
+  Serial.print("M3 = ");
+  Serial.print(throttle3);
+  Serial.println(" us");
+
+  Serial.print("M4 = ");
+  Serial.print(throttle4);
+  Serial.println(" us");
+
+  Serial.println();
+}
+
+
+// -------------------------------------------------------
+// SETUP
+// -------------------------------------------------------
+
+void setup() {
+
+  Serial.begin(115200);
+
+  // ---------------------------------------------------
+  // SET ESC PWM FREQUENCY
+  // ---------------------------------------------------
+
+  ESC1.setPeriodHertz(50);
+  ESC2.setPeriodHertz(50);
+  ESC3.setPeriodHertz(50);
+  ESC4.setPeriodHertz(50);
+
+  // ---------------------------------------------------
+  // ATTACH ESCs
+  // ---------------------------------------------------
+
+  ESC1.attach(ESC1_PIN, 1000, 2000);
+  ESC2.attach(ESC2_PIN, 1000, 2000);
+  ESC3.attach(ESC3_PIN, 1000, 2000);
+  ESC4.attach(ESC4_PIN, 1000, 2000);
+
+  // ---------------------------------------------------
+  // INITIAL MINIMUM THROTTLE
+  // ---------------------------------------------------
+
+  setAllThrottle(MIN_THROTTLE);
+
+  Serial.println();
+  Serial.println("========================================");
+  Serial.println("       4 BLDC MOTOR TEST - ESP32");
+  Serial.println("       A2212 1400KV / SimonK 30A");
+  Serial.println("========================================");
+
+  Serial.println();
+
+  Serial.println("INDIVIDUAL MOTOR CONTROL");
+  Serial.println("----------------------------------------");
+
+  Serial.println("1 = Motor 1 +10 us");
+  Serial.println("q = Motor 1 -10 us");
+
+  Serial.println("2 = Motor 2 +10 us");
+  Serial.println("w = Motor 2 -10 us");
+
+  Serial.println("3 = Motor 3 +10 us");
+  Serial.println("e = Motor 3 -10 us");
+
+  Serial.println("4 = Motor 4 +10 us");
+  Serial.println("r = Motor 4 -10 us");
+
+  Serial.println();
+
+  Serial.println("ALL MOTOR CONTROL");
+  Serial.println("----------------------------------------");
+
+  Serial.println("+ = Increase ALL by 10 us");
+  Serial.println("- = Decrease ALL by 10 us");
+
+  Serial.println("0 = STOP ALL");
+  Serial.println("s = STOP ALL");
+
+  Serial.println("p = Print throttle values");
+
+  Serial.println();
+
+  Serial.println("Safety throttle range:");
+  Serial.println("1000 - 1300 us");
+
+  Serial.println();
+
+  Serial.println("Waiting 8 seconds for ESC arming...");
+
+  delay(8000);
+
+  Serial.println();
+  Serial.println("========== READY ==========");
+}
+
+
+// -------------------------------------------------------
+// LOOP
+// -------------------------------------------------------
+
+void loop() {
+
+  if (Serial.available()) {
+
+    char command = Serial.read();
+
+    // ---------------------------------------------------
+    // MOTOR 1
+    // ---------------------------------------------------
+
+    if (command == '1') {
+
+      setThrottle(1, throttle1 + THROTTLE_STEP);
+
+    }
+
+    else if (command == 'q') {
+
+      setThrottle(1, throttle1 - THROTTLE_STEP);
+
+    }
+
+
+    // ---------------------------------------------------
+    // MOTOR 2
+    // ---------------------------------------------------
+
+    else if (command == '2') {
+
+      setThrottle(2, throttle2 + THROTTLE_STEP);
+
+    }
+
+    else if (command == 'w') {
+
+      setThrottle(2, throttle2 - THROTTLE_STEP);
+
+    }
+
+
+    // ---------------------------------------------------
+    // MOTOR 3
+    // ---------------------------------------------------
+
+    else if (command == '3') {
+
+      setThrottle(3, throttle3 + THROTTLE_STEP);
+
+    }
+
+    else if (command == 'e') {
+
+      setThrottle(3, throttle3 - THROTTLE_STEP);
+
+    }
+
+
+    // ---------------------------------------------------
+    // MOTOR 4
+    // ---------------------------------------------------
+
+    else if (command == '4') {
+
+      setThrottle(4, throttle4 + THROTTLE_STEP);
+
+    }
+
+    else if (command == 'r') {
+
+      setThrottle(4, throttle4 - THROTTLE_STEP);
+
+    }
+
+
+    // ---------------------------------------------------
+    // ALL FOUR MOTORS
+    // ---------------------------------------------------
+
+    else if (command == '+') {
+
+      setAllThrottle(throttle1 + THROTTLE_STEP);
+
+    }
+
+    else if (command == '-') {
+
+      setAllThrottle(throttle1 - THROTTLE_STEP);
+
+    }
+
+
+    // ---------------------------------------------------
+    // EMERGENCY STOP
+    // ---------------------------------------------------
+
+    else if (command == '0' || command == 's') {
+
+      stopAllMotors();
+
+    }
+
+
+    // ---------------------------------------------------
+    // DISPLAY STATUS
+    // ---------------------------------------------------
+
+    else if (command == 'p') {
+
+      showThrottle();
+
+    }
+  }
+}
