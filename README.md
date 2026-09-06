@@ -301,8 +301,8 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 | **Week 8**   | PCB Routing, ERC/DRC Verification & Hardware Procurement           | Completed   |
 | **Week 9**   | PCB ic finalization & Component Weight testing                     | Completed   |
 | **Week 10**  | PCB Fabrication & Assembly                                         | In Progress |
-| **Week 11**  | Hardware Integration & Sensor Interfacing                          | Pending     |
-| **Week 12**  | Firmware Development & System Testing                              | Pending     |
+| **Week 11**  | Hardware Integration & Sensor Interfacing                          | In Progress |
+| **Week 12**  | Firmware Development & System Testing                              | In Progress |
 | **Week 13**  | Final Testing, Documentation & Project Demonstration               | Pending     |
 | **Week 14**  | Research Paper Writing & Project Documentation                     | Pending     |
 | **Week 15**  | Final Presentation & Project Demonstration                         | Pending     |
@@ -424,6 +424,8 @@ BE-Capstone-Project/
 |       ├── IC bom.xlsx
 |       ├── README.md
 |       └── fp-info-cache
+│   ├── Tests/
+|       ├── MotorAllSync.in
 │   └── cad_model
 |       ├── BLDC Holder.ipt
 |       ├── BLDC Holder.stl
