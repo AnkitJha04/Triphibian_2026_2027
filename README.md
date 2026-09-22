@@ -460,6 +460,12 @@ BE-Capstone-Project/
 |   └── Command and Control center/
 |       ├── README.md
 |       ├── index.html
+|       ├── Commands.md
+|       └── Application/
+|           ├── README.md
+|           ├── index.html
+|           ├── app.py
+|           ├── requirements.txt
 │
 ├── images/
 |   ├── circuit_diagram-2.jpg
