@@ -1,83 +1,152 @@
-# RiftWalker — Tactical Control Station
+# RIFTWALKER / TRIPHIBIOUS COMMAND DECK — FINAL
 
-Single-file dashboard (`index.html`) for the triphibious VTOL **RiftWalker**: kinematics you can fly, interactive hardware, operational usages, a firmware lab you can edit and simulate, and a Wi‑Fi command page that tracks that firmware.
+Canonical interface file: **`Index.html`**
 
-**Engineering:** Ankit Jha, Nidhi Kulkarni, Yadnyee Joshi, Dnyanam Gala
+Desktop app: **`Application/app.py`** (loads that HTML). See the root `README.md` for run commands.
 
----
+## What this build is based on
+This build was rebuilt from the supplied project material rather than from the earlier generic dashboard alone:
 
-## Run
+- `Project Overview.md` — primary project architecture and operating principle.
+- `Algorithm.png` — system initialization, health check, standby, sensor acquisition, fusion, control loop, mode decision, safety monitoring, failsafe and mission-completion flow.
+- `Circuit Diagram Schematic Accurate.png` — custom flight-controller architecture and component/power/signal relationships.
+- `Circuit Diagram.png` and `System Architecture.png` — system-level arrangement and multi-domain actuation/sensing relationships.
+- `Major Project Simulation.zip` — Wokwi/ESP32 prototype firmware and wiring. This is treated as a prototype reference, not silently substituted for the final PCB.
+- `Related Defence Projects.pdf` — supplied application/use-case material.
+- Previous RiftWalker HTML files — used for visual/tactical presentation language only, not as the technical authority.
 
-Open `index.html` in a modern browser, or:
+## Important source reconciliation
+The project overview describes the final propulsion architecture as four A2212 BLDC motors, four ESCs and four 1045 propellers with four servo-driven motor pivots. The supplied Wokwi simulation is a bench prototype using an ESP32 DevKit, MPU6050, BMP180, SSD1306, HC-SR04, four A4988 drivers/stepper motors and four servos. The dashboard deliberately keeps these two layers separate so a prototype component is not presented as a final hardware component.
 
-```bash
-python -m http.server 8765
-```
+## Included functionality
 
-Then visit `http://127.0.0.1:8765/`. Tailwind CDN and fonts need network on first load.
+### 1. Digital twin
+- Four propulsion pods and four vector pivots.
+- A2212 + 1045 propulsion representation.
+- Four foam wheels for land contact and water buoyancy.
+- Air / Land / Water state-dependent animation.
+- Animated propeller motion tied to throttle.
+- Vector angle moves at 120 degrees/second in the local model, matching the documented prototype design intent.
+- Camera presets and mouse orbit/zoom on the flight view.
 
----
+### 2. Telemetry
+Local simulation is always functional and deterministic. It reports:
+- mode
+- throttle
+- speed
+- altitude/distance
+- pressure
+- battery
+- roll
+- pitch
+- current
+- power
+- individual vector-servo state (front/rear mirror values follow the uploaded prototype's `180-angle` / `angle` mapping)
 
-## Pilot controls (all pages)
+The UI does **not** call local simulation telemetry “hardware telemetry”.
 
-| Input | Action |
-| --- | --- |
-| **↑ / W-style ArrowUp** | Forward (air: translate; land/water: aero-drive) |
-| **↓** | Reverse / back |
-| **← →** | Yaw (differential on surface) |
-| **Camera** | **TOP / ISO / SIDE / FRONT / REAR** presets. Drag the canvas to orbit, **Q/E** to yaw the camera, wheel to zoom, **AUTO** to spin. X (red) / Y+ forward (green) / Z up (blue) gizmo. Servo 0° = disk in XY (lift); 90° = disk facing aft (aero-drive). |
-| **Throttle slider** | 0–100% collective / ESC duty |
+Environment pressure scales thrust, speed, and current once per simulation step. It does not compound every animation frame.
 
-Arrows are ignored while a text field or the firmware editor is focused.
+### 3. Real ESP32 link
+The Ground Control tab uses this explicit contract:
 
-### Physics used in the twin
+- `GET /health`
+- `GET /telemetry`
+- `POST /command` with JSON
 
-- Mass \(m = 2.2\,\mathrm{kg}\), max thrust \(T_\max = 4.72\,\mathrm{kgf}\), hover fraction \(T/W^{-1} = 2.2/4.72 = 0.466\) (**46.6%**).
-- Instantaneous T/W \(= (\mathrm{thr}\cdot T_\max)/m\). Air current \(I \approx 2.2 + (31.2-2.2)\,(\mathrm{thr}/0.466)^{1.55}\,\mathrm{A}\). Land / water use quadratic load at 5.4 A and 14.9 A full throttle (design points).
-- Caps: 58 / 78 / 10 km/h (air / land / water). DS3218 vector slews at **120°/s** (0° lift disk, 90° aero-drive).
-- Muscle bus slider (7–12.6 V) rescales predicted current as \(I \cdot 11.1 / V_\mathrm{bus}\).
+Example telemetry response:
 
----
-
-## Five views
-
-1. **Kinematics** — Top-down canvas. Props are large silver disks with amber tips (no overlay covering them). Domain buttons, throttle, pad, live I / heading / T/W.
-2. **Hardware** — Click cards for inspector text. Bus voltage and **manual vector** sliders couple into the same twin.
-3. **Usages** — Defence perimeter, recon, SAR, border intercept, ecology, port security, wildfire, humanitarian, infrastructure, hazmat *standoff sensing*. Click map = waypoint; arrows drive the asset.
-4. **Firmware** — Full editable FreeRTOS + HTTP C2 sketch. **COMPILE**, **SIMULATE TICK** / **RUN 2s** (injects MS5607 hPa and ToF mm into your `pressure < … && distance > …` law), **FLASH ESP32-S3** (stores image in `localStorage` for Command), **PARSE @CMD**.
-5. **Command** — Palette is rebuilt from firmware `// @CMD …` lines (and `server.on("…")` as fallback). **USE TWIN** applies routes to this dashboard. **PING /api/telemetry** tries `http://<ip>:<port>` on a real ESP32 (firmware must send `Access-Control-Allow-Origin: *`). **ESTOP** zeroes throttle.
-
-Add a new radio command by inserting a line in firmware:
-
-```text
-// @CMD id=MYCMD method=POST path=/api/foo args=pct label=My command
-```
-
-then PARSE or FLASH. The Command page updates without a rebuild.
-
----
-
-## Hardware C2 (optional)
-
-1. Copy the Firmware editor into Arduino-ESP32 / ESP-IDF, flash the S3.
-2. Join AP `RiftWalker` (see sketch) or the board’s STA IP.
-3. Set IPv4 on Command (default `192.168.4.1`), click PING.
-4. Mixed-content: serve this dashboard over **http://** not https://, or the browser will block `http://192.168.4.1`.
-
-If fetch fails (CORS, wrong LAN), the twin still executes the same command so you can debug UX offline.
-
----
-
-## Original RTOS law (still in the sketch)
-
-```c
-if (pressure < 1000 && distance > 100) {
-  activeDomain = DOMAIN_AIR;
-  vectorServos(0); // VTOL Lift
-} else {
-  activeDomain = DOMAIN_SURFACE;
-  vectorServos(90); // Aero-Drive
+```json
+{
+  "ok": true,
+  "mode": "air",
+  "throttle": 42,
+  "vector": 90,
+  "altitude": 1.25,
+  "pressure": 998.4,
+  "speed": 18.2,
+  "roll": -1.1,
+  "pitch": 2.4,
+  "battery": 91,
+  "current": 18.6,
+  "power": 275
 }
 ```
 
-Change the numbers in the editor and SIMULATE — the kinematics domain follows the parsed thresholds.
+Example command response:
+
+```json
+{
+  "ok": true,
+  "applied": true,
+  "command": "SET_THROTTLE"
+}
+```
+
+The interface only displays `ACK`/`APPLIED` after the device actually answers. Network failure is shown as `FAIL`.
+
+### 4. Hardware / PCB
+The interactive PCB map follows the supplied custom schematic's logical placement:
+- ESP32-S3 central controller
+- MPU6050 / magnetometer sensor area
+- AP2112K 3.3 V regulation area
+- ESC outputs
+- vector-servo outputs
+- propulsion/wheel blocks
+- USB-C service
+- battery ADC
+- prototype sonar/water sensing
+
+The exact supplied schematic is also available inside the Hardware tab.
+
+### 5. Use cases
+The mission library is custom to the supplied triphibious architecture:
+- Flood Rescue / Access
+- Coastal Survey
+- Hazardous Area Inspection
+- Industrial / Dam Inspection
+- Disaster Recon
+- Wetland / Environment
+
+Each scenario has its own environment sequence, route, phase list and animation rather than a generic route reused for every case.
+
+## Prototype pin map retained from the uploaded Wokwi code
+The uploaded prototype uses:
+
+| Function | GPIO |
+|---|---:|
+| FWD / BCK | 26 / 25 |
+| LEFT / RIGHT | 17 / 15 |
+| WATER | 16 |
+| Throttle ADC | 34 |
+| Ultrasonic | TRIG 5 / ECHO 35 |
+| Vector servos | 18 / 19 / 23 / 4 |
+| Step outputs | 27 / 14 / 13 / 12 |
+| DIR | 32 / 33 |
+| I2C SDA / SCL | 21 / 22 |
+
+The firmware also uses FreeRTOS tasks for motor and sensor processing.
+
+## Why the previous telemetry problem is not hidden
+The uploaded Wokwi sketch does not implement a Wi-Fi HTTP telemetry server. Therefore a browser cannot truthfully fetch live hardware telemetry directly from that exact sketch. This dashboard therefore:
+
+1. runs a complete local simulation without pretending it is hardware;
+2. provides the hardware API adapter separately;
+3. requires the ESP32 firmware to expose `/health`, `/telemetry` and `/command` before it will show real device ACK/data.
+
+This is intentional: a green “ESP32 LIVE” indicator is never produced merely because the UI changed a local variable.
+
+## Run
+**Browser:** open `Index.html`.
+
+**Desktop:** `python Application/app.py` after `python -m pip install -r Application/requirements.txt`.
+
+No CDN or framework is required for the simulation interface.
+
+For hardware mode, the client must reach the ESP32 IP and the firmware must implement the API contract above. CORS must be allowed when the page is not served from the ESP32 origin.
+
+## Recommended hardware-side next step
+Add the API adapter to the actual ESP32-S3 firmware. Do not retrofit the Wokwi stepper/A4988 test architecture into the final PCB merely to make the dashboard appear to work. The final project documentation identifies A2212/ESC/1045 propulsion and servo-based motor orientation; the Wokwi file is the prototype test bench.
+
+## Safety
+This interface is a visualization/control-deck prototype. It must not be used as a safety-certified flight controller. Real motor/servo testing should be performed with propellers removed or in an appropriate restrained test setup and with an independent physical emergency-disarm path.
