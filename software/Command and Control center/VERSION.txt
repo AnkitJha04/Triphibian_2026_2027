@@ -1,0 +1,9 @@
+RIFTWALKER Command Deck
+Release: 1.0.0-hardware-bring-up
+Release date: 2026-10-23
+Status: hardware bring-up and tuning only; not flight-authorized.
+
+Main application tabs: System, Use Cases, Ground Control.
+Ground Control sections: Flight/Drive, PID Tuning, ESC Calibration & Safety.
+Primary sketches: Actual_Fly_Control.ino, Callibration_Code.ino, ESP_NOW_Ground_Transmitter.ino.
+Auxiliary sketch: I2C_Scanner.ino.
