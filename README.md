@@ -466,15 +466,28 @@ BE-Capstone-Project/
 |       ├── libraries.txt
 |       ├── sketch.ino
 |       └── wokwi-project.txt
-|   └── Command and Control center/
+|   └── Command and Control Center/
 |       ├── README.md
-|       ├── index.html
-|       ├── Commands.md
-|       └── Application/
-|           ├── README.md
-|           ├── index.html
-|           ├── app.py
-|           ├── requirements.txt
+|       ├── app.py
+|       ├── bridge.py
+|       ├── requirements.txt
+|       ├── requirements-web.txt
+|       ├── run_desktop.bat
+|       ├── run_web.bat
+|       ├── VERSION.txt
+|       ├── FIRMWARE_BUILD.md
+|       ├── GROUND_BRIDGE_SETUP.md
+|       ├── HARDWARE_PINOUT.md
+|       ├── SERIAL_PROTOCOL.md
+|       ├── TUNING_GUIDE.md
+|       ├── VALIDATION_CHECKLIST.md
+|       ├── RELEASE_MANIFEST.txt
+|       ├── RELEASE_NOTES_HARDWARE_V1.md
+|       ├── Web/
+|           └── index.html
+|       └── tests/
+|           ├── test_bridge.py
+|           └── test_ms5607_compensation.py
 │
 ├── images/
 |   ├── circuit_diagram-2.jpg
