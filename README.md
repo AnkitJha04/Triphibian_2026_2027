@@ -300,30 +300,43 @@ Overall, the architecture is designed around sharing the same propulsion, power,
 | **Week 7**   | Flight Controller PCB Design & Schematic Development               | Completed   |
 | **Week 8**   | PCB Routing, ERC/DRC Verification & Hardware Procurement           | Completed   |
 | **Week 9**   | PCB ic finalization & Component Weight testing                     | Completed   |
-| **Week 10**  | PCB Fabrication & Assembly                                         | In Progress |
-| **Week 11**  | Hardware Integration & Sensor Interfacing                          | In Progress |
-| **Week 12**  | Firmware Development & System Testing                              | In Progress |
-| **Week 13**  | Final Testing, Documentation & Project Demonstration               | Pending     |
-| **Week 14**  | Research Paper Writing & Project Documentation                     | Pending     |
-| **Week 15**  | Final Presentation & Project Demonstration                         | Pending     |
+| **Week 10**  | PCB Fabrication & Assembly                                         | Completed   |
+| **Week 11**  | Hardware Integration & Sensor Interfacing                          | Completed   |
+| **Week 12**  | Firmware Development & System Testing                              | Completed   |
+| **Week 13**  | Final Testing, Documentation & Project Demonstration               | In Progress |
+| **Week 14**  | Research Paper Writing & Project Documentation                     | In Progress |
+| **Week 15**  | Final Presentation & Project Demonstration                         | In Progress |
 
 ---
 
 ## Weekly Progress Updates
 
 Students must update this section every week.
-| Week  | Date        |                  Work Completed                |             Next Week         |         Issues / Challenges       | GitHub Commit |
-|------ |------------ |----------------------------------------------- |------------------------------ |---------------------------------- |-------------- |
-| **1** | 22/06–28/06 | Problem finalization & planning                | Literature survey             | Concept feasibility               | —             |
-| **2** | 29/06–05/07 | Literature survey & paper review               | Requirement analysis          | Mobility vs. weight               | —             |
-| **3** | 06/07–12/07 | Requirements & components finalized            | Engineering calculations      | Weight, thrust & cost             | —             |
-| **4** | 13/07–19/07 | Weight, thrust, torque & buoyancy calculations | Mechanical design             | Maintaining low weight            | —             |
-| **5** | 20/07–26/07 | 3D CAD model & mechanical design               | Design validation & PCB       | Mechanism integration             | —             |
-| **6** | 27/07–02/08 | Design validation & simulation                 | PCB schematic                 | Mechanical-electronic integration | —             |
-| **7** | 03/08–09/08 | ESP32-S3 schematic & component selection       | PCB routing & verification    | GPIO & power management           | —             |
-| **8** | 10/08–16/08 | PCB routing, ERC/DRC & documentation           | PCB fabrication & procurement | Routing & component placement     | —             |
-| **9** | 17/08–23/08 | Finalized and Completed PCB design verification| Working on software           | Component availability            | —             |
-| **10**| 24/08–30/08 | Made control center to control/code the drone  | PCB fabrication & procurement | Software needs and api development| —             |
+## Weekly Progress Updates
+
+| Week | Date | Work Completed | Next Week | Issues / Challenges | GitHub Commit |
+|------|------|----------------|-----------|---------------------|--------------|
+| **1** | 22/06–28/06 | Problem finalization and project planning | Literature survey | Concept feasibility | — |
+| **2** | 29/06–05/07 | Literature survey and paper review | Requirement analysis | Mobility vs. weight | — |
+| **3** | 06/07–12/07 | Requirements and components finalized | Engineering calculations | Weight, thrust and cost | — |
+| **4** | 13/07–19/07 | Weight, thrust, torque and buoyancy calculations | Mechanical design | Maintaining low weight | — |
+| **5** | 20/07–26/07 | 3D CAD model and mechanical design | Design validation and PCB | Mechanism integration | — |
+| **6** | 27/07–02/08 | Design validation and simulation | PCB schematic | Mechanical-electronic integration | — |
+| **7** | 03/08–09/08 | ESP32-S3 schematic and component selection | PCB routing and verification | GPIO and power management | — |
+| **8** | 10/08–16/08 | PCB routing, ERC/DRC and documentation | PCB fabrication and procurement | Routing and component placement | — |
+| **9** | 17/08–23/08 | PCB design verification completed | Software development | Component availability | — |
+| **10** | 24/08–30/08 | Web-based control interface developed | Hardware integration | Software and API development | — |
+| **11** | 31/08–06/09 | PCB fabrication and component procurement | Hardware assembly | Component integration | — |
+| **12** | 07/09–13/09 | Mechanical frame and propulsion system assembly | Electronic integration | Mechanical alignment | — |
+| **13** | 14/09–20/09 | ESP32-S3, ESCs, servos and power system integration | Firmware development | Hardware-software interfacing | — |
+| **14** | 21/09–27/09 | Motor and servo control implementation | Control interface testing | Control calibration | — |
+| **15** | 28/09–04/10 | Wireless communication and control interface integration | Land mode testing | Communication reliability | — |
+| **16** | 05/10–11/10 | Land-mode testing and mechanical adjustments | Water-mode testing | Stability and propulsion alignment | — |
+| **17** | 12/10–18/10 | Land mobility successfully demonstrated | Water-mode validation | Buoyancy and stability | — |
+| **18** | 19/10–25/10 | Water floating and surface mobility successfully demonstrated | System integration and validation | Water ingress and stability | — |
+| **19** | 26/10–01/11 | Integrated prototype validation and documentation | Flight testing | Flight safety and calibration | — |
+| **20** | 02/11–04/11 | Land mobility and water floating completed and demonstrated; project documentation updated | Flight testing and validation | Aerial flight testing remains pending | — |
+
 
 
 
