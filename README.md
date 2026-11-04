@@ -559,14 +559,25 @@ When powered, the RiftWalker initializes its IMU and establishes a secure ESP-NO
 
 ---
 
+```markdown
 ## Result Images / Videos
 
-Add images or videos of the working prototype.
+The following images and videos showcase the working RiftWalker prototype and its recent testing.
 
-```markdown
-![Prototype](images/prototype_photo.jpg)
+### Prototype Images
+
+![RiftWalker Prototype](riftwalker.jpeg)
+
+### Testing Videos
+
+#### Land Mode Testing
+
+[Watch Land Mode Testing](forward.mp4)
+
+#### Water Mode Testing
+
+[Watch Water Mode Testing](water.mp4)
 ```
-
 Video Link:
 
 ```markdown
