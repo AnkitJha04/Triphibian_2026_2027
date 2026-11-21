@@ -551,11 +551,11 @@ When powered, the RiftWalker initializes its IMU and establishes a secure ESP-NO
 
 ## Testing and Results
 
-| Test No. | Test Description | Expected Result | Actual Result | Status      |
-| -------- | ---------------- | --------------- | ------------- | ----------- |
-| 1        |                  |                 |               | Pass / Fail |
-| 2        |                  |                 |               | Pass / Fail |
-| 3        |                  |                 |               | Pass / Fail |
+| Test No. | Test Description | Expected Result | Actual Result | Status |
+| --- | --- | --- | --- | --- |
+| 1 | IMU and barometer verification | MPU6050 and MS5607 provide valid sensor data. | MPU6050 detected at `0x68`; MS5607 detected at `0x77`; gyro bias, body-axis mapping and barometer response were recorded. | Pass |
+| 2 | Direct USB telemetry and command verification | Command Deck receives fresh telemetry and commands are acknowledged correctly. | 300 consecutive telemetry packets were recorded at approximately 4 Hz with zero missing/recovered frames; command correlation and blackbox transfer integrity were verified. | Pass |
+| 3 | Surface-water flotation observation | Prototype remains afloat during controlled tank observation. | Prototype flotation was visually demonstrated in the supplied water-trial photographs. Water mobility and propulsion qualification remain pending. | Pass |
 
 ---
 
@@ -641,13 +641,19 @@ Overall, these improvements would enhance RiftWalker's performance, autonomy, an
 
 ## Research Paper / Publication
 
-| Item                      | Details                                                   |
-| ------------------------- | --------------------------------------------------------- |
-| Paper Title               |                                                           |
-| Conference / Journal Name |                                                           |
-| Paper Status              | Not Started / Drafting / Submitted / Accepted / Published |
-| Submission Date           |                                                           |
-| Paper Link                |                                                           |
+| Item | Details |
+| --- | --- |
+| Paper Title | Not yet finalised |
+| Conference / Journal Name | Not yet selected |
+| Paper Status | Not Started |
+| Submission Date | Not applicable |
+| Paper Link | Not available |
+
+---
+
+## YouTube Video Link
+
+[RiftWalker YouTube Video](https://youtu.be/TcmBg6WYthk)
 
 ---
 
