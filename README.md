@@ -614,6 +614,22 @@ ETC.
    
 ---
 
+## Suggestions & Future Improvements
+
+The following improvements are recommended to enhance the autonomy, stability, reliability, and safety of the RiftWalker system:
+
+Autonomous Navigation: Implement autonomous navigation using sensor fusion, obstacle detection, path planning, and intelligent decision-making to enable independent operation across air, land, and water environments.
+
+PCB Schematic & Documentation: Develop a clearly labelled PCB schematic detailing electrical connections, power distribution, communication interfaces, sensors, and actuators. Proper documentation would simplify troubleshooting, maintenance, and future hardware upgrades.
+
+PID Tuning & Stabilization: Implement and optimize PID control across all three operating domains. Mode-specific PID parameters should be tuned independently to ensure stable flight, smooth land movement, and controlled water propulsion.
+
+Safety & Fail-Safe Mechanisms: Identify and address critical failure points by implementing communication-loss detection, low-battery protection, emergency motor shutdown, sensor failure handling, and safe mode transitions to prevent hardware damage and operational failures.
+
+Overall, these improvements would enhance RiftWalker's performance, autonomy, and operational safety while establishing a stronger foundation for future development.
+
+---
+
 ## Future Scope
 
 1. Autonomous AI Integration: Upgrading the processing core to incorporate a lightweight AI vision module (e.g., using the ESP32-S3's vector instructions or an external neural accelerator) for autonomous optical obstacle avoidance.
